@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 import os
 
+# configurations
 ENV = 'dev'
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -16,7 +17,9 @@ else:
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
-# Models
+# MODELS
+
+# Each set of game stats belongs to a specific player
 class PlayerGameStats(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	game = db.Column(db.String(10))
@@ -35,16 +38,29 @@ class PlayerGameStats(db.Model):
 	recieving_touchdowns = db.Column(db.Integer())
 	recieving_2point_conversions = db.Column(db.Integer())
 	fumbles_lost = db.Column(db.Integer())
+	player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
 
+# Each player belongs to a specific week
+class Player(db.Model):
+	id = db.Column(db.Integer(), primary_key=True)
+	name = db.Column(db.String(100))
+	stats = db.relationship('PlayerGameStats', backref='player')
+	week_id = db.Column(db.Integer(), db.ForeignKey('week.id'))
+
+# Each week belongs to a specific year
 class Week(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	week_number = db.Column(db.Integer())
-	#player_game_stats = db.List however you do this
+	players = db.relationship('Player', backref='week')
+	year_id = db.Column(db.Integer, db.ForeignKey('year.id'))
 
 class Year(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	year_number = db.Column(db.Integer())
-	#weeks = db.List however you do this
+	weeks = db.relationship('Week', backref='year')
 
 if __name__ == '__main__':
 	app.run()
+
+
+
