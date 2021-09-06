@@ -10,6 +10,8 @@ flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
 requests = "*"
 bs4 = "*"
+selenium = "*"
+marshmallow = "*"
 
 [dev-packages]
 
