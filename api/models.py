@@ -1,5 +1,10 @@
 from api import db, ma
 
+class lastUpdate(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	last_year = db.Column(db.Integer())
+	last_week = db.Column(db.Integer())
+
 # Each set of game stats belongs to a specific player
 class PlayerGameStats(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -78,6 +83,15 @@ class Year(db.Model):
 class PlayerGameStatsSchema(ma.Schema):
 	class Meta:
 		fields = ('id', 'game', 'passing_attempts', 'passing_completions',
+			'passing_yards', 'passing_touchdowns', 'passing_yards',
+			'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
+			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
+			'rushing_2point_conversions', 'receptions', 'recieving_yards',
+			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost')
+
+class PlayerYearStatsSchema(ma.Schema):
+	class Meta:
+		fields = ('passing_attempts', 'passing_completions',
 			'passing_yards', 'passing_touchdowns', 'passing_yards',
 			'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
 			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
