@@ -3,14 +3,14 @@ from flask import Flask, request, jsonify
 from api import db, ma
 import json
 from api.models import PlayerGameStats, Week, Year, Player
-from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, PlayerYearStatsSchema
+from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, PlayerYearStatsSchema, TopPlayerSchema
 
 stat_categories = ['passing_attempts', 'passing_completions',
 			'passing_yards', 'passing_touchdowns', 'passing_yards',
 			'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
 			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
 			'rushing_2point_conversions', 'receptions', 'recieving_yards',
-			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost']
+			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points']
 positions = ['QB', 'RB', 'WR','TE']
 
 player_game_stat_schema = PlayerGameStatsSchema()
@@ -22,6 +22,7 @@ year_schema = YearSchema()
 years_schema = YearSchema(many=True)
 week_schema = WeekSchema()
 weeks_schema = WeekSchema(many=True)
+top_player_schema = TopPlayerSchema()
 
 # Route to return all players in the database
 @app.route('/players', methods=['GET'])
@@ -73,6 +74,33 @@ def get_year(name, year):
 			return jsonify({"Error": "No data found for this player during specified season."}), 404
 	else:
 		return jsonify({"Error": "Player not found in database."}), 404
+
+
+# Route to return the top fantasy performers from a specific week
+@app.route('/top/<year>/<week>', methods=['GET'])
+def get_top(year, week):
+	top1 = db.session.query(PlayerGameStats, Player, Week, Year).filter(
+		PlayerGameStats.week_id == Week.id,
+		Week.week_number == week,
+		Week.year_id == Year.id,
+		Year.year_number == year,
+		Year.player_id == Player.id).order_by(PlayerGameStats.fantasy_points.desc()).all()
+	if top1:
+		#print(top1[0][0].fantasy_points)
+		#print(top1[0][1].name)
+		result = top_player_schema.dump({"name": top1[0][1].name, "fantasy_points": top1[0][0].fantasy_points})
+		return jsonify(result), 200
+	else:
+		return jsonify({"Error": "Year or week requested is invalid."}), 404
+
+
+
+
+
+
+
+
+
 
 
 

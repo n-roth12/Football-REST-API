@@ -24,13 +24,14 @@ class PlayerGameStats(db.Model):
 	recieving_touchdowns = db.Column(db.Integer())
 	recieving_2point_conversions = db.Column(db.Integer())
 	fumbles_lost = db.Column(db.Integer())
+	fantasy_points = db.Column(db.Float())
 	week_id = db.Column(db.Integer(), db.ForeignKey('week.id'))
 
 	def __init__(self, game, passing_attempts, passing_completions, passing_yards,
 		passing_touchdowns, passing_interceptions,
 		passing_2point_conversions, rushing_attempts, rushing_yards, rushing_touchdowns,
 		rushing_2point_conversions, receptions, recieving_yards, recieving_touchdowns,
-		recieving_2point_conversions, fumbles_lost):
+		recieving_2point_conversions, fumbles_lost, fantasy_points):
 
 		self.game = game
 		self.passing_attempts = passing_attempts
@@ -48,6 +49,7 @@ class PlayerGameStats(db.Model):
 		self.recieving_touchdowns = recieving_touchdowns
 		self.recieving_2point_conversions = recieving_2point_conversions
 		self.fumbles_lost = fumbles_lost
+		self.fantasy_points = fantasy_points
 
 # Player is the parent object
 class Player(db.Model):
@@ -87,7 +89,7 @@ class PlayerGameStatsSchema(ma.Schema):
 			'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
 			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
 			'rushing_2point_conversions', 'receptions', 'recieving_yards',
-			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost')
+			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points')
 
 class PlayerYearStatsSchema(ma.Schema):
 	class Meta:
@@ -96,7 +98,11 @@ class PlayerYearStatsSchema(ma.Schema):
 			'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
 			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
 			'rushing_2point_conversions', 'receptions', 'recieving_yards',
-			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost')
+			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points')
+
+class TopPlayerSchema(ma.Schema):
+	class Meta:
+		fields = ('name', 'fantasy_points')
 
 class PlayerSchema(ma.Schema):
 	class Meta:

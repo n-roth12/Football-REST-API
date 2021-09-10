@@ -56,8 +56,7 @@ def scrape():
                         'rec_yds': int(stats[13]),
                         'rec_tds': int(stats[14]),
                         'rec_2pts': int(stats[15]),
-                        'fumbles_lost': int(stats[16])
-                    }
+                        'fumbles_lost': int(stats[16])                    }
 
                     week_dict[name] = player_dict
 
