@@ -82,36 +82,79 @@ class Year(db.Model):
 	def __init__(self, year_number):
 		self.year_number = year_number
 
-class PlayerGameStatsSchema(ma.Schema):
+class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('id', 'game', 'passing_attempts', 'passing_completions',
-			'passing_yards', 'passing_touchdowns', 'passing_yards',
-			'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
-			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
-			'rushing_2point_conversions', 'receptions', 'recieving_yards',
-			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points')
+		model = PlayerGameStats
+	
+	game = ma.auto_field()
+	passing_attempts = ma.auto_field()
+	passing_completions = ma.auto_field()
+	passing_yards = ma.auto_field()
+	passing_touchdowns = ma.auto_field()
+	passing_interceptions = ma.auto_field()
+	passing_2point_conversions = ma.auto_field()
+	rushing_attempts = ma.auto_field()
+	rushing_yards = ma.auto_field()
+	rushing_touchdowns = ma.auto_field()
+	rushing_2point_conversions = ma.auto_field()
+	receptions = ma.auto_field()
+	recieving_yards = ma.auto_field()
+	recieving_touchdowns = ma.auto_field()
+	recieving_2point_conversions = ma.auto_field()
+	fumbles_lost = ma.auto_field()
+	fantasy_points = ma.auto_field()
 
-class PlayerYearStatsSchema(ma.Schema):
+class PlayerYearStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('passing_attempts', 'passing_completions',
-			'passing_yards', 'passing_touchdowns', 'passing_yards',
-			'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
-			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
-			'rushing_2point_conversions', 'receptions', 'recieving_yards',
-			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points')
+		model = PlayerGameStats
 
-class TopPlayerSchema(ma.Schema):
-	class Meta:
-		fields = ('name', 'fantasy_points')
+	passing_attempts = ma.auto_field()
+	passing_completions = ma.auto_field()
+	passing_yards = ma.auto_field()
+	passing_touchdowns = ma.auto_field()
+	passing_interceptions = ma.auto_field()
+	passing_2point_conversions = ma.auto_field()
+	rushing_attempts = ma.auto_field()
+	rushing_yards = ma.auto_field()
+	rushing_touchdowns = ma.auto_field()
+	rushing_2point_conversions = ma.auto_field()
+	receptions = ma.auto_field()
+	recieving_yards = ma.auto_field()
+	recieving_touchdowns = ma.auto_field()
+	recieving_2point_conversions = ma.auto_field()
+	fumbles_lost = ma.auto_field()
+	fantasy_points = ma.auto_field()
 
-class PlayerSchema(ma.Schema):
+class PlayerSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('id', 'name', 'position', 'year')
+		model = Player
 
-class WeekSchema(ma.Schema):
-	class Meta:
-		fields = ('id', 'week_number', 'players')
+	id = ma.auto_field()
+	name = ma.auto_field()
+	position = ma.auto_field()
+	years = ma.auto_field()
 
-class YearSchema(ma.Schema):
+class TopPlayerSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('id', 'year_number', 'weeks')
+		fields = ('name', 'stats')
+
+	stats = ma.Nested(PlayerGameStatsSchema)
+
+class WeekSchema(ma.SQLAlchemySchema):
+	class Meta:
+		model = Week
+
+	id = ma.auto_field()
+	week_number = ma.auto_field()
+	player_game_stats = ma.auto_field()
+
+class YearSchema(ma.SQLAlchemySchema):
+	class Meta:
+		model = Year
+
+	id = ma.auto_field()
+	year_number = ma.auto_field()
+	weeks = ma.auto_field()
+
+
+

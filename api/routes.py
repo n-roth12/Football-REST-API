@@ -86,9 +86,7 @@ def get_top(year, week):
 		Year.year_number == year,
 		Year.player_id == Player.id).order_by(PlayerGameStats.fantasy_points.desc()).all()
 	if top1:
-		#print(top1[0][0].fantasy_points)
-		#print(top1[0][1].name)
-		result = top_player_schema.dump({"name": top1[0][1].name, "fantasy_points": top1[0][0].fantasy_points})
+		result = top_player_schema.dump({"name": top1[0][1].name, "stats": top1[0][0]})
 		return jsonify(result), 200
 	else:
 		return jsonify({"Error": "Year or week requested is invalid."}), 404
