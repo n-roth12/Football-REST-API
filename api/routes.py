@@ -45,6 +45,7 @@ def get_pos_players(pos):
 	return jsonify(result)
 
 # Route to return the stats of a specific player from a specific week
+@app.route('/api/stats/<name>/<year>', defaults={'week': None}, methods=['GET'])
 @app.route('/api/stats/<name>/<year>/<week>', methods=['GET'])
 def get_week(name, year, week):
 	names = name.split("_")
@@ -53,64 +54,35 @@ def get_week(name, year, week):
 	if p1:
 		y1 = db.session.query(Year).filter(Year.player_id == p1.id, Year.year_number == year).first()
 		if y1:
-			w1 = db.session.query(Week).filter(Week.year_id == y1.id, Week.week_number == week).first()
-			if w1:
-				stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == w1.id).first()
-				result = player_game_stat_schema.dump(stats)
-				return jsonify(result), 200
+
+			if week:
+				w1 = db.session.query(Week).filter(Week.year_id == y1.id, Week.week_number == week).first()
+				if w1:
+					stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == w1.id).first()
+					result = player_game_stat_schema.dump(stats)
+				else:
+					return jsonify({"Error": "No data found for this player during specified week."}), 404
+
 			else:
-				return jsonify({"Error": "No data found for this player during specified week."}), 404
+				weeks = db.session.query(Week).filter(Week.year_id == y1.id).all()
+				season_stats = {}
+				for week in weeks:
+					week_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
+					for stat_category in stat_categories:
+						if stat_category in season_stats:
+							season_stats[stat_category] += getattr(week_stats, stat_category)
+						else:
+							season_stats[stat_category] = getattr(week_stats, stat_category)
+				result = player_year_stats_schema.dump(season_stats)
+
+			return jsonify(result), 200
 		else:
 			return jsonify({"Error": "No data found for this player during the specified season."}), 404
 	else:
 		return jsonify({"Error": "Player not found in database."}), 404
 
-# Route to return the season total stats of a specific player from a specific year
-@app.route('/api/stats/<name>/<year>', methods=['GET'])
-def get_year(name, year):
-	names = name.split("_")
-	for name in names:
-		name.replace(name[0], name[0].upper())
-	name = ' '.join(names)
-	p1 = db.session.query(Player).filter(Player.name == name).first()
-	if p1:
-		y1 = db.session.query(Year).filter(Year.player_id == p1.id, Year.year_number == year).first()
-		if y1:
-			weeks = db.session.query(Week).filter(Week.year_id == y1.id).all()
-			season_stats = {}
-			for week in weeks:
-				week_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
-				for stat_category in stat_categories:
-					if stat_category in season_stats:
-						season_stats[stat_category] += getattr(week_stats, stat_category)
-					else:
-						season_stats[stat_category] = getattr(week_stats, stat_category)
-			result = player_year_stats_schema.dump(season_stats)
-			return jsonify(result), 200
-		else:
-			return jsonify({"Error": "No data found for this player during specified season."}), 404
-	else:
-		return jsonify({"Error": "Player not found in database."}), 404
-
-
-# Route to return the top fantasy performers from a specific week
-@app.route('/api/top/<year>/<week>', methods=['GET'])
-def get_top(year, week):
-	top_players = db.session.query(PlayerGameStats, Player, Week, Year,).filter(
-		PlayerGameStats.week_id == Week.id,
-		Week.week_number == week,
-		Week.year_id == Year.id,
-		Year.year_number == year,
-		Year.player_id == Player.id).order_by(PlayerGameStats.fantasy_points.desc()).all()
-	if top_players:
-		result = []
-		for i in range(len(top_players)):
-			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][1].name, "stats": top_players[i][0]}))
-		return jsonify(result), 200
-	else:
-		return jsonify({"Error": "Year or week requested is invalid."}), 404
-
 # Route to return the top fantasy performers of a specific position from a specific week
+@app.route('/api/top/<year>/<week>', defaults={'pos': None}, methods=['GET'])
 @app.route('/api/top/<year>/<week>/<pos>', methods=['GET'])
 def get_pos_top(year, week, pos):
 	top_players = db.session.query(PlayerGameStats, Player, Week, Year,).filter(
@@ -118,8 +90,11 @@ def get_pos_top(year, week, pos):
 		Week.week_number == week,
 		Week.year_id == Year.id,
 		Year.year_number == year,
-		Year.player_id == Player.id,
-		Player.position == pos.upper()).order_by(PlayerGameStats.fantasy_points.desc()).all()
+		Year.player_id == Player.id)
+	if pos:
+		top_players = top_players.filter(Player.position == pos.upper()).order_by(PlayerGameStats.fantasy_points.desc()).all()
+	else:
+		top_players = top_players.order_by(PlayerGameStats.fantasy_points.desc()).all()
 	if top_players:
 		result = []
 		for i in range(len(top_players)):
@@ -127,39 +102,6 @@ def get_pos_top(year, week, pos):
 		return jsonify(result), 200
 	else:
 		return jsonify({"Error": "Year or week requested is invalid."}), 404
-
-"""
-# Route to return the top fantasy performers from a specific week
-@app.route('/top/<year>', methods=['GET'])
-def get_top(year):
-	top_players = db.session.query(Player, Year).filter(
-		Year.year_number == year,
-		Year.player_id == Player.id).all()
-	if top_players:
-		result = []
-		for player in top_players:
-			weeks = db.session.query(Week).filter(Week.year_id = player[1].id)
-			season_stats = {}
-			for week in weeks:
-				week_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
-				for stat_category in stat_categories:
-					if stat_category in season_stats:
-						season_stats[stat_category] += getattr(week_stats, stat_category)
-					else:
-						season_stats[stat_category] = getattr(week_stats, stat_category)
-		result.append(top_player_schema.dump({"rank": 0, "name": player[i][1].name, "stats": top_players[i][0]}))
-
-
-
-	else:
-		return jsonify({"Error": "No data found for this year."})
-		result = []
-		for i in range(len(top_players)):
-			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][1].name, "stats": top_players[i][0]}))
-		return jsonify(result), 200
-	else:
-		return jsonify({"Error": "Year or week requested is invalid."}), 404"""
-
 
 
 

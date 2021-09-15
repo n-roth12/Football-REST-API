@@ -18,7 +18,6 @@
 			<div class="content">
 				<div>
 					<h2>API Endpoints</h2>
-					<hr>
 					<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
 					<ul>
 						<li><strong>/players</strong> : Returns the list of all players in the database. <a href="/api/players">Sample Response</a></li>
@@ -30,8 +29,11 @@
 				</div>
 				<hr>
 				<div>
-					<p>Only data between the years 2012 to 2021 and the weeks 1 to 17 (18 for 2021) can be retrieved.</p>
-					<p>In addition, data is only available for the positions of QB, RB, WR, and TE</p>
+					<h3>Notes</h3>
+					<ul>
+						<li>Only data between the years 2012 to 2021 and the weeks 1 to 17 (18 for 2021) can be retrieved.</li>
+						<li>In addition, data is only available for the positions of QB, RB, WR, and TE</li>
+					</ul>
 				</div>
 				<hr>
 				<div>
@@ -66,6 +68,9 @@
 		box-shadow: 0px 0px 1px 1px lightgrey;
 		border-radius: 10px;
 		padding: 10px;
+	}
+	strong {
+		font-family: monospace;
 	}
 </style>
 
