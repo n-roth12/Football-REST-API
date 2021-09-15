@@ -33,8 +33,15 @@ def home_page():
 # Route to return all players in the database
 @app.route('/api/players', methods=['GET'])
 def get_players():
-	all_players = Player.query.all()
+	all_players = db.session.query(Player).all()
 	result = players_schema.dump(all_players)
+	return jsonify(result)
+
+# Route to return all players of a specific position
+@app.route('/api/players/<pos>', methods=['GET'])
+def get_pos_players(pos):
+	pos_players = db.session.query(Player).filter(Player.position == pos).all()
+	result = players_schema.dump(pos_players)
 	return jsonify(result)
 
 # Route to return the stats of a specific player from a specific week

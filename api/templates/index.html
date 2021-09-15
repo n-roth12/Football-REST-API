@@ -17,11 +17,12 @@
 			</div>
 			<div>
 				<h2>API Endpoints</h2>
+				<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
 				<ul>
-					<li>/players : Returns the list of all players in the database.</li>
-					<li>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt : Returns the game stats of a specific player from a specific week. </li>
-					<li>/stats/&ltname&gt/&ltyear&gt : Returns the season total stats of a specific player from a specific year.</li>
-					<li>/top/&ltyear&gt/&ltweek&gt : Returns the top fantasy player for a specific year and week including their stats.</li>
+					<li><strong>/players</strong> : Returns the list of all players in the database. <a href="/api/players">Try endpoint</a></li>
+					<li><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player from a specific week. <a href="/api/stats/Dalvin_Cook/2019/6">Try endpoint</a></li>
+					<li><strong>/stats/&ltname&gt/&ltyear&gt</strong> : Returns the season total stats of a specific player from a specific year. <a href="/api/stats/Calvin_Ridley/2020">Try endpoint</a></li>
+					<li><strong>/top/&ltyear&gt/&ltweek&gt</strong> : Returns the top fantasy player for a specific year and week including their stats. <a href="/api/top/2018/4">Try endpoint</a></li>
 				</ul>
 			</div>
 			<div>
@@ -40,6 +41,13 @@
 	</body>
 
 <style>
+	body {
+		background-color: #f7f7f7;
+	}
+
+	h1 {
+		margin-top: 10px;
+	}
 </style>
 
 </html>
