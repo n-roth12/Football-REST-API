@@ -11,23 +11,32 @@
 
 	<body>
 		<div class="container">
-			<div>
-				<h1 class="text-center">Welcome to the FFBProject API.</h1>
-				<h3 class="text-center">An API for retrieving information about NFL players.</h3>
-			</div>
-			<div>
-				<h2>API Endpoints</h2>
-				<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
-				<ul>
-					<li><strong>/players</strong> : Returns the list of all players in the database. <a href="/api/players">Try endpoint</a></li>
-					<li><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player from a specific week. <a href="/api/stats/Dalvin_Cook/2019/6">Try endpoint</a></li>
-					<li><strong>/stats/&ltname&gt/&ltyear&gt</strong> : Returns the season total stats of a specific player from a specific year. <a href="/api/stats/Calvin_Ridley/2020">Try endpoint</a></li>
-					<li><strong>/top/&ltyear&gt/&ltweek&gt</strong> : Returns the top fantasy player for a specific year and week including their stats. <a href="/api/top/2018/4">Try endpoint</a></li>
-				</ul>
-			</div>
-			<div>
-				<p>Only data between the years 2012 to 2021 and the weeks 1 to 17 (18 for 2021) can be retrieved.</p>
-				<p>In addition, data is only available for the positions of QB, RB, WR, and TE</p>
+			<header>
+				<h1 class="text-center">Welcome to FFBProject API.</h1>
+				<h3 class="text-center">An API for retrieving information about NFL players and performances.</h3>
+			</header>
+			<div class="content">
+				<div>
+					<h2>API Endpoints</h2>
+					<hr>
+					<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
+					<ul>
+						<li><strong>/players</strong> : Returns the list of all players in the database. <a href="/api/players">Sample Response</a></li>
+						<li><strong>/stats/&ltname&gt/&ltyear&gt</strong> : Returns the season total stats of a specific player from a specific year. <a href="/api/stats/Calvin_Ridley/2020">Sample Response</a></li>
+						<li><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player from a specific week. <a href="/api/stats/Dalvin_Cook/2019/6">Sample Response</a></li>
+						<li><strong>/top/&ltyear&gt/&ltweek&gt</strong> : Returns the stats of all players from a specific year and week ordered by fantasy points finish. <a href="/api/top/2018/4">Sample Response</a></li>
+						<li><strong>/top/&ltyear&gt/&ltweek&gt/&ltpos&gt</strong> : Returns the stats of all players of a specific position from a specific year and week ordered by fantasy points finish. <a href="/api/top/2020/8/te">Sample Response</a></li>
+					</ul>
+				</div>
+				<hr>
+				<div>
+					<p>Only data between the years 2012 to 2021 and the weeks 1 to 17 (18 for 2021) can be retrieved.</p>
+					<p>In addition, data is only available for the positions of QB, RB, WR, and TE</p>
+				</div>
+				<hr>
+				<div>
+					<a href="https://github.com/n-roth12/Football-REST-API">GitHub Repository</a>
+				</div>
 			</div>
 		</div>
 
@@ -47,6 +56,16 @@
 
 	h1 {
 		margin-top: 10px;
+	}
+	header {
+		margin-top: 30px;
+	}
+	.content {
+		margin-top: 30px;
+		background-color: white;
+		box-shadow: 0px 0px 1px 1px lightgrey;
+		border-radius: 10px;
+		padding: 10px;
 	}
 </style>
 

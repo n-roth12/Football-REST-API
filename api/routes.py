@@ -110,6 +110,24 @@ def get_top(year, week):
 	else:
 		return jsonify({"Error": "Year or week requested is invalid."}), 404
 
+# Route to return the top fantasy performers of a specific position from a specific week
+@app.route('/api/top/<year>/<week>/<pos>', methods=['GET'])
+def get_pos_top(year, week, pos):
+	top_players = db.session.query(PlayerGameStats, Player, Week, Year,).filter(
+		PlayerGameStats.week_id == Week.id,
+		Week.week_number == week,
+		Week.year_id == Year.id,
+		Year.year_number == year,
+		Year.player_id == Player.id,
+		Player.position == pos.upper()).order_by(PlayerGameStats.fantasy_points.desc()).all()
+	if top_players:
+		result = []
+		for i in range(len(top_players)):
+			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][1].name, "stats": top_players[i][0]}))
+		return jsonify(result), 200
+	else:
+		return jsonify({"Error": "Year or week requested is invalid."}), 404
+
 """
 # Route to return the top fantasy performers from a specific week
 @app.route('/top/<year>', methods=['GET'])
