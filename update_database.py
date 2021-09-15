@@ -4,7 +4,6 @@ import json
 
 from api.models import PlayerGameStats, Player, Week, Year
 from api import db, ma
-import json
 from collections import OrderedDict
 
 

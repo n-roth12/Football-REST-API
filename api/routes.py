@@ -1,5 +1,5 @@
 from api import app
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from api import db, ma
 import json
 from api.models import PlayerGameStats, Week, Year, Player
@@ -11,6 +11,7 @@ stat_categories = ['passing_attempts', 'passing_completions',
 			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
 			'rushing_2point_conversions', 'receptions', 'recieving_yards',
 			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points']
+
 positions = ['QB', 'RB', 'WR','TE']
 
 player_game_stat_schema = PlayerGameStatsSchema()
@@ -24,17 +25,23 @@ week_schema = WeekSchema()
 weeks_schema = WeekSchema(many=True)
 top_player_schema = TopPlayerSchema()
 
+# Route to the index page
+@app.route('/')
+def home_page():
+	return render_template('index.html')
+
 # Route to return all players in the database
-@app.route('/players', methods=['GET'])
+@app.route('/api/players', methods=['GET'])
 def get_players():
 	all_players = Player.query.all()
 	result = players_schema.dump(all_players)
 	return jsonify(result)
 
 # Route to return the stats of a specific player from a specific week
-@app.route('/stats/<name>/<year>/<week>', methods=['GET'])
+@app.route('/api/stats/<name>/<year>/<week>', methods=['GET'])
 def get_week(name, year, week):
-	name = name.replace("_", " ")
+	names = name.split("_")
+	name = ' '.join(names)
 	p1 = db.session.query(Player).filter(Player.name == name).first()
 	if p1:
 		y1 = db.session.query(Year).filter(Year.player_id == p1.id, Year.year_number == year).first()
@@ -52,9 +59,12 @@ def get_week(name, year, week):
 		return jsonify({"Error": "Player not found in database."}), 404
 
 # Route to return the season total stats of a specific player from a specific year
-@app.route('/stats/<name>/<year>', methods=['GET'])
+@app.route('/api/stats/<name>/<year>', methods=['GET'])
 def get_year(name, year):
-	name = name.replace("_", " ")
+	names = name.split("_")
+	for name in names:
+		name.replace(name[0], name[0].upper())
+	name = ' '.join(names)
 	p1 = db.session.query(Player).filter(Player.name == name).first()
 	if p1:
 		y1 = db.session.query(Year).filter(Year.player_id == p1.id, Year.year_number == year).first()
@@ -77,23 +87,53 @@ def get_year(name, year):
 
 
 # Route to return the top fantasy performers from a specific week
-@app.route('/top/<year>/<week>', methods=['GET'])
+@app.route('/api/top/<year>/<week>', methods=['GET'])
 def get_top(year, week):
-	top1 = db.session.query(PlayerGameStats, Player, Week, Year).filter(
+	top_players = db.session.query(PlayerGameStats, Player, Week, Year,).filter(
 		PlayerGameStats.week_id == Week.id,
 		Week.week_number == week,
 		Week.year_id == Year.id,
 		Year.year_number == year,
 		Year.player_id == Player.id).order_by(PlayerGameStats.fantasy_points.desc()).all()
-	if top1:
-		result = top_player_schema.dump({"name": top1[0][1].name, "stats": top1[0][0]})
+	if top_players:
+		result = []
+		for i in range(len(top_players)):
+			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][1].name, "stats": top_players[i][0]}))
 		return jsonify(result), 200
 	else:
 		return jsonify({"Error": "Year or week requested is invalid."}), 404
 
+"""
+# Route to return the top fantasy performers from a specific week
+@app.route('/top/<year>', methods=['GET'])
+def get_top(year):
+	top_players = db.session.query(Player, Year).filter(
+		Year.year_number == year,
+		Year.player_id == Player.id).all()
+	if top_players:
+		result = []
+		for player in top_players:
+			weeks = db.session.query(Week).filter(Week.year_id = player[1].id)
+			season_stats = {}
+			for week in weeks:
+				week_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
+				for stat_category in stat_categories:
+					if stat_category in season_stats:
+						season_stats[stat_category] += getattr(week_stats, stat_category)
+					else:
+						season_stats[stat_category] = getattr(week_stats, stat_category)
+		result.append(top_player_schema.dump({"rank": 0, "name": player[i][1].name, "stats": top_players[i][0]}))
 
 
 
+	else:
+		return jsonify({"Error": "No data found for this year."})
+		result = []
+		for i in range(len(top_players)):
+			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][1].name, "stats": top_players[i][0]}))
+		return jsonify(result), 200
+	else:
+		return jsonify({"Error": "Year or week requested is invalid."}), 404"""
 
 
 

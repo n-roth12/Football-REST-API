@@ -132,11 +132,10 @@ class PlayerSchema(ma.SQLAlchemySchema):
 	id = ma.auto_field()
 	name = ma.auto_field()
 	position = ma.auto_field()
-	years = ma.auto_field()
 
 class TopPlayerSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('name', 'stats')
+		fields = ('rank', 'name', 'stats')
 
 	stats = ma.Nested(PlayerGameStatsSchema)
 
