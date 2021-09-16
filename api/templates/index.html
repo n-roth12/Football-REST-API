@@ -36,7 +36,7 @@
 							<li>Parameters : Name, Year, Week</li>
 							<ul>
 								<li>Name (Required) : The name of the player whose stats will be returned. Format as Firstname_Lastname.</li>
-								<li>Year (Required) : The year from which to return stats.</li>
+								<li>Year (Optional) : The year from which to return stats. If year is not specified, the career total stats for the specified player will be returned.</li>
 								<li>Week (Optional) : The week of the season from which to return stats. If week is not specified, the season total stats of the specified year will be returned.</li>
 							</ul>
 							<li><a href="/api/stats/Dalvin_Cook/2019/6">Sample Response</a></li>
@@ -49,7 +49,7 @@
 							<li>Parameters : Year, Week, Pos</li>
 							<ul>
 								<li>Year (Required) : The year from which to return stats</li>
-								<li>Week (Required) : The week from which to return stats</li>
+								<li>Week (Optional) : The week from which to return stats. If the week is not specified, the season totals for the specified player will be returned.</li>
 								<li>Pos (Optional) : The position to filter players by. The options are QB, RB, WR, and TE. If the position is not specified, the stats from all players will be returned.</li>
 							</ul>
 							<li><a href="/api/top/2020/8/te">Sample Response</a></li>
