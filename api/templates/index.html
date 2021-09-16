@@ -10,34 +10,61 @@
 	</head>
 
 	<body>
+		<header>
+			<div class="header-div">
+				<h1 class="text-center">Welcome to FFBProject API</h1>
+				<h4 class="text-center">An API for retrieving information about NFL players and performances</h4>
+			</div>
+		</header>
 		<div class="container">
-			<header>
-				<h1 class="text-center">Welcome to FFBProject API.</h1>
-				<h3 class="text-center">An API for retrieving information about NFL players and performances.</h3>
-			</header>
 			<div class="content">
 				<div>
-					<h2>API Endpoints</h2>
+					<h3>API Endpoints</h3>
 					<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
-					<ul>
-						<li><strong>/players</strong> : Returns the list of all players in the database. <a href="/api/players">Sample Response</a></li>
-						<li><strong>/stats/&ltname&gt/&ltyear&gt</strong> : Returns the season total stats of a specific player from a specific year. <a href="/api/stats/Calvin_Ridley/2020">Sample Response</a></li>
-						<li><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player from a specific week. <a href="/api/stats/Dalvin_Cook/2019/6">Sample Response</a></li>
-						<li><strong>/top/&ltyear&gt/&ltweek&gt</strong> : Returns the stats of all players from a specific year and week ordered by fantasy points finish. <a href="/api/top/2018/4">Sample Response</a></li>
-						<li><strong>/top/&ltyear&gt/&ltweek&gt/&ltpos&gt</strong> : Returns the stats of all players of a specific position from a specific year and week ordered by fantasy points finish. <a href="/api/top/2020/8/te">Sample Response</a></li>
-					</ul>
+					<hr>
+					<div>
+						<p><strong>/players</strong> : Returns the list of all players in the database.</p>
+						<ul>
+							<li>Parameters: None</li>
+							<li><a href="/api/players">Sample Response</a></li>
+						</ul>
+					</div>
+					<hr>
+					<div>
+						<p><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player.</p>
+						<ul>
+							<li>Parameters : Name, Year, Week</li>
+							<ul>
+								<li>Name (Required) : The name of the player whose stats will be returned. Format as Firstname_Lastname.</li>
+								<li>Year (Required) : The year from which to return stats.</li>
+								<li>Week (Optional) : The week of the season from which to return stats. If week is not specified, the season total stats of the specified year will be returned.</li>
+							</ul>
+							<li><a href="/api/stats/Dalvin_Cook/2019/6">Sample Response</a></li>
+						</ul>
+					</div>
+					<hr>
+					<div>
+						<p><strong>/top/&ltyear&gt/&ltweek&gt/&ltpos&gt</strong> : Returns the stats of players ordered by fantasy points finish.</p>
+						<ul>
+							<li>Parameters : Year, Week, Pos</li>
+							<ul>
+								<li>Year (Required) : The year from which to return stats</li>
+								<li>Week (Required) : The week from which to return stats</li>
+								<li>Pos (Optional) : The position to filter players by. The options are QB, RB, WR, and TE. If the position is not specified, the stats from all players will be returned.</li>
+							</ul>
+							<li><a href="/api/top/2020/8/te">Sample Response</a></li>
+						</ul>
+					</div>
 				</div>
 				<hr>
 				<div>
 					<h3>Notes</h3>
 					<ul>
 						<li>Only data between the years 2012 to 2021 and the weeks 1 to 17 (18 for 2021) can be retrieved.</li>
-						<li>In addition, data is only available for the positions of QB, RB, WR, and TE</li>
+						<li>In addition, data is only available for the offensive skill-position players (QB, RB, WR, TE).
+						</li>
+						<li><a href="https://github.com/n-roth12/Football-REST-API">GitHub Repository</a></li>
 					</ul>
-				</div>
-				<hr>
-				<div>
-					<a href="https://github.com/n-roth12/Football-REST-API">GitHub Repository</a>
 				</div>
 			</div>
 		</div>
@@ -48,32 +75,38 @@
 		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
-
 	</body>
-
 <style>
 	body {
 		background-color: #f7f7f7;
 	}
-
-	h1 {
-		margin-top: 10px;
+	hr {
+		background-color: #000080;
+		opacity: 20%;
+	}
+	.header-div {
+		padding: 20px;
 	}
 	header {
-		margin-top: 30px;
+		background-color: #000080;
+		color: white;
+		box-shadow: 0px 0px 1px 1px black;
 	}
 	.content {
 		margin-top: 30px;
+		margin-bottom: 30px;
 		background-color: white;
 		box-shadow: 0px 0px 1px 1px lightgrey;
 		border-radius: 10px;
-		padding: 10px;
+		padding: 20px;
 	}
 	strong {
 		font-family: monospace;
 	}
+	ul {
+		list-style-type: circle;
+	}
 </style>
-
 </html>
 
 

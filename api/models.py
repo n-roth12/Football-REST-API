@@ -51,6 +51,29 @@ class PlayerGameStats(db.Model):
 		self.fumbles_lost = fumbles_lost
 		self.fantasy_points = fantasy_points
 
+	def __init__(self, passing_attempts, passing_completions, passing_yards,
+		passing_touchdowns, passing_interceptions,
+		passing_2point_conversions, rushing_attempts, rushing_yards, rushing_touchdowns,
+		rushing_2point_conversions, receptions, recieving_yards, recieving_touchdowns,
+		recieving_2point_conversions, fumbles_lost, fantasy_points):
+
+		self.passing_attempts = passing_attempts
+		self.passing_completions = passing_completions
+		self.passing_yards = passing_yards
+		self.passing_touchdowns = passing_touchdowns
+		self.passing_interceptions = passing_interceptions
+		self.passing_2point_conversions = passing_2point_conversions
+		self.rushing_attempts = rushing_attempts
+		self.rushing_yards = rushing_yards
+		self.rushing_touchdowns = rushing_touchdowns
+		self.rushing_2point_conversions = rushing_2point_conversions
+		self.receptions = receptions
+		self.recieving_yards = recieving_yards
+		self.recieving_touchdowns = recieving_touchdowns
+		self.recieving_2point_conversions = recieving_2point_conversions
+		self.fumbles_lost = fumbles_lost
+		self.fantasy_points = fantasy_points
+
 # Player is the parent object
 class Player(db.Model):
 	id = db.Column(db.Integer(), primary_key=True)
@@ -85,7 +108,7 @@ class Year(db.Model):
 class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
 		model = PlayerGameStats
-	
+
 	game = ma.auto_field()
 	passing_attempts = ma.auto_field()
 	passing_completions = ma.auto_field()
