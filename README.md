@@ -30,5 +30,4 @@ The base URL for all endpoints is 127.0.0.1:5000/api.
 </ul>
 
 ## Database
-The database is constructed by running scrape_stats.py, which scrapes the stats for every player between 2013 and 2020 into JSON files, then running
-build_database.py, which creates the database using these JSON files. Only statistics for QBs, RBs, WRs, and TEs are available through this API.
+The database used for the API can be constructed from the JSON files present in this repository by running build_database.py. Alternatively, you can get the most recent stats by running scrape_stats.py, which will output the updated versions of these JSON files into the working directory, then running build_database.py to create the database. Only statistics for offensive skill-position players (QB, RB, WR, and TE) are available through this API.
