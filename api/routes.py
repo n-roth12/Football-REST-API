@@ -5,7 +5,7 @@ from sqlalchemy import desc
 from api import db, ma
 import json
 from api.models import PlayerGameStats, Week, Year, Player
-from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, PlayerYearStatsSchema, TopPlayerSchema
+from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, TopPlayerSchema
 
 stat_categories = ['passing_attempts', 'passing_completions',
 			'passing_yards', 'passing_touchdowns',
@@ -17,8 +17,6 @@ positions = ['QB', 'RB', 'WR','TE']
 
 player_game_stat_schema = PlayerGameStatsSchema()
 player_game_stats_schema = PlayerGameStatsSchema(many=True)
-player_year_stats_schema = PlayerYearStatsSchema()
-players_year_stats_schema = PlayerYearStatsSchema(many=True)
 player_schema = PlayerSchema()
 players_schema = PlayerSchema(many=True)
 year_schema = YearSchema()
@@ -33,25 +31,21 @@ top_player_schema = TopPlayerSchema()
 def home_page():
 	return render_template('index.html')
 
-# Route to return all players in the database
-@app.route('/api/players', methods=['GET'])
-def get_players():
-	all_players = db.session.query(Player).all()
-	result = players_schema.dump(all_players)
-	return jsonify(result)
-
-# Route to return all players of a specific position
+# Route to return players in the database
+@app.route('/api/players', defaults={'pos': None}, methods=['GET'])
 @app.route('/api/players/<pos>', methods=['GET'])
-def get_pos_players(pos):
-	pos_players = db.session.query(Player).filter(Player.position == pos).all()
-	result = players_schema.dump(pos_players)
-	return jsonify(result)
+def get_players(pos: str) -> list[dict]:
+	if not pos:
+		players = db.session.query(Player).all()
+	else:
+		players = db.session.query(Player).filter(Player.position == pos.upper()).all()
+	return jsonify(players_schema.dump(players)), 200
 
 # Route to return the stats of a specific player from a specific week
 @app.route('/api/stats/<name>', defaults={'year': None, 'week': None}, methods=['GET'])
 @app.route('/api/stats/<name>/<year>', defaults={'week': None}, methods=['GET'])
 @app.route('/api/stats/<name>/<year>/<week>', methods=['GET'])
-def get_week(name, year, week):
+def get_week(name: str, year: int, week: int) -> dict:
 	names = name.split("_")
 	name = ' '.join(names)
 	player = db.session.query(Player).filter(Player.name == name).first()
@@ -80,7 +74,7 @@ def get_week(name, year, week):
 						season_stats[stat_category] += getattr(game_stats, stat_category)
 					else:
 						season_stats[stat_category] = getattr(game_stats, stat_category)
-			return jsonify(player_year_stats_schema.dump(season_stats)), 200
+			return jsonify(player_game_stat_schema.dump(season_stats)), 200
 	else:
 		# Query to sum the weekly stats for a player across all years played
 		career_stats = db.session.query(Player, Week, Year, func.sum(PlayerGameStats.passing_attempts),
@@ -120,13 +114,13 @@ def get_week(name, year, week):
 			career_stats[16],
 			career_stats[17],
 			career_stats[18])
-		return jsonify(player_year_stats_schema.dump(result)), 200
+		return jsonify(player_game_stat_schema.dump(result)), 200
 
 # Route to return the top fantasy performers of a specific position from a specific week
 @app.route('/api/top/<year>', defaults={'week': None, 'pos': None}, methods=['GET'])
 @app.route('/api/top/<year>/<week>', defaults={'pos': None}, methods=['GET'])
 @app.route('/api/top/<year>/<week>/<pos>', methods=['GET'])
-def get_pos_top(year, week, pos):
+def get_pos_top(year: int, week: int, pos: str) -> list[dict]:
 	if week:
 		top_players = db.session.query(PlayerGameStats, Player, Week, Year).filter(
 			PlayerGameStats.week_id == Week.id,
@@ -145,7 +139,6 @@ def get_pos_top(year, week, pos):
 			return jsonify(result), 200
 		else:
 			return jsonify({"Error": "Year or week requested is invalid."}), 404
-
 	else:
 		# Query to sum the weekly stats for all players across all years played
 		top_players = db.session.query(Player, Week, Year, func.sum(PlayerGameStats.passing_attempts),

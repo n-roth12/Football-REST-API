@@ -23,9 +23,12 @@
 					<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
 					<hr>
 					<div>
-						<p><strong>/players</strong> : Returns the list of all players in the database.</p>
+						<p><strong>/players/&ltpos&gt</strong> : Returns the list of all players in the database.</p>
 						<ul>
-							<li>Parameters: None</li>
+							<li>Parameters: Pos</li>
+							<ul>
+								<li>Pos (Optional) : The position of players to be returned. Options are QB, RB, WR, TE. If no position is specified, players of all four positions will be returned.</li>
+							</ul>
 							<li><a href="/api/players">Sample Response</a></li>
 						</ul>
 					</div>

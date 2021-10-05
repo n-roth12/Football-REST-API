@@ -1,9 +1,10 @@
 from api import db, ma
 
-class lastUpdate(db.Model):
+# This class stores the data about the last time the database was updated
+class MetaData(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	last_year = db.Column(db.Integer())
-	last_week = db.Column(db.Integer())
+	week_of_update = db.Column(db.Integer())
+	year_of_update = db.Column(db.Integer())
 
 # Each set of game stats belongs to a specific player
 class PlayerGameStats(db.Model):
@@ -27,11 +28,11 @@ class PlayerGameStats(db.Model):
 	fantasy_points = db.Column(db.Float())
 	week_id = db.Column(db.Integer(), db.ForeignKey('week.id'))
 
-	def __init__(self, game, passing_attempts, passing_completions, passing_yards,
-		passing_touchdowns, passing_interceptions,
-		passing_2point_conversions, rushing_attempts, rushing_yards, rushing_touchdowns,
-		rushing_2point_conversions, receptions, recieving_yards, recieving_touchdowns,
-		recieving_2point_conversions, fumbles_lost, fantasy_points):
+	def __init__(self, game: str, passing_attempts: int, passing_completions: int, passing_yards: int,
+		passing_touchdowns: int, passing_interceptions: int,
+		passing_2point_conversions: int, rushing_attempts: int, rushing_yards: int, rushing_touchdowns: int,
+		rushing_2point_conversions: int, receptions: int, recieving_yards: int, recieving_touchdowns: int,
+		recieving_2point_conversions: int, fumbles_lost: int, fantasy_points: float) -> None:
 
 		self.game = game
 		self.passing_attempts = passing_attempts
@@ -51,11 +52,11 @@ class PlayerGameStats(db.Model):
 		self.fumbles_lost = fumbles_lost
 		self.fantasy_points = fantasy_points
 
-	def __init__(self, passing_attempts, passing_completions, passing_yards,
-		passing_touchdowns, passing_interceptions,
-		passing_2point_conversions, rushing_attempts, rushing_yards, rushing_touchdowns,
-		rushing_2point_conversions, receptions, recieving_yards, recieving_touchdowns,
-		recieving_2point_conversions, fumbles_lost, fantasy_points):
+	def __init__(self, passing_attempts: int, passing_completions: int, passing_yards: int,
+		passing_touchdowns: int, passing_interceptions: int,
+		passing_2point_conversions: int, rushing_attempts: int, rushing_yards: int, rushing_touchdowns: int,
+		rushing_2point_conversions: int, receptions: int, recieving_yards: int, recieving_touchdowns: int,
+		recieving_2point_conversions: int, fumbles_lost: int, fantasy_points: float) -> None:
 
 		self.passing_attempts = passing_attempts
 		self.passing_completions = passing_completions
@@ -81,7 +82,7 @@ class Player(db.Model):
 	position = db.Column(db.String(3))
 	years = db.relationship('Year', backref='player')
 
-	def __init__(self, name, position):
+	def __init__(self, name: str, position: str) -> None:
 		self.name = name
 		self.position = position
 
@@ -92,7 +93,7 @@ class Week(db.Model):
 	player_game_stats = db.relationship('PlayerGameStats', backref='week')
 	year_id = db.Column(db.Integer, db.ForeignKey('year.id'))
 
-	def __init__(self, week_number):
+	def __init__(self, week_number: int) -> None:
 		self.week_number = week_number
 
 # Each Year is a child of a Player and has Weeks as children
@@ -102,7 +103,7 @@ class Year(db.Model):
 	weeks = db.relationship('Week', backref='year')
 	player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
 
-	def __init__(self, year_number):
+	def __init__(self, year_number: int) -> None:
 		self.year_number = year_number
 
 class PlayerGameStatsSchema(ma.SQLAlchemySchema):
@@ -110,27 +111,6 @@ class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 		model = PlayerGameStats
 
 	game = ma.auto_field()
-	passing_attempts = ma.auto_field()
-	passing_completions = ma.auto_field()
-	passing_yards = ma.auto_field()
-	passing_touchdowns = ma.auto_field()
-	passing_interceptions = ma.auto_field()
-	passing_2point_conversions = ma.auto_field()
-	rushing_attempts = ma.auto_field()
-	rushing_yards = ma.auto_field()
-	rushing_touchdowns = ma.auto_field()
-	rushing_2point_conversions = ma.auto_field()
-	receptions = ma.auto_field()
-	recieving_yards = ma.auto_field()
-	recieving_touchdowns = ma.auto_field()
-	recieving_2point_conversions = ma.auto_field()
-	fumbles_lost = ma.auto_field()
-	fantasy_points = ma.auto_field()
-
-class PlayerYearStatsSchema(ma.SQLAlchemySchema):
-	class Meta:
-		model = PlayerGameStats
-
 	passing_attempts = ma.auto_field()
 	passing_completions = ma.auto_field()
 	passing_yards = ma.auto_field()

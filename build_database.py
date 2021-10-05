@@ -1,4 +1,4 @@
-from api.models import PlayerGameStats, Player, Week, Year
+from api.models import PlayerGameStats, Player, Week, Year, MetaData
 from api import db, ma
 import json
 from collections import OrderedDict
@@ -7,6 +7,8 @@ def build():
 	years = range(2012, 2021)
 	weeks = range(1, 18)
 	positions = ['QB', 'RB', 'WR', 'TE']
+	max_year = 0
+	max_week = 0
 
 	print('Building database...')
 
@@ -62,7 +64,9 @@ def build():
 
 		print('Completed adding ' + position + 's to database.')
 
+
 	print('Completed building database!')
+
 
 if __name__ == '__main__':
 	build()

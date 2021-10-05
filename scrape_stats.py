@@ -1,50 +1,70 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import time
+import threading
 
 def scrape():
     positions = ['QB', 'RB', 'WR', 'TE']
     print('Scraping NFL player game stats ...')
+    thread_list = []
 
     for position in positions:
-        print("Scraping " + position + " data...")
+        player_data_dict = {}
+        t = threading.Thread(target=pos_helper, args=[position, player_data_dict])
+        t.start()
+        thread_list.append(t)
 
-        data = pos_scrape(position)
-        with open(position + "_data.json", "w") as outfile: 
-            json.dump(data, outfile)
-
-        print('Completed scraping ' + position + ' stats.')
+    for thread in thread_list:
+        thread.join()
 
     print('Completed scraping all NFL player game stats.')
 
-def pos_scrape(pos):
+def pos_helper(pos, player_data_dict):
+    print(f'Scraping {pos} data...')
+    pos_scrape(pos, player_data_dict)
+    print(f'Completed scraping {pos} data.')
+    with open(pos + "_data.json", "w") as outfile:
+        json.dump(player_data_dict, outfile)
+
+def pos_scrape(pos, player_data_dict):
     years = range(2012, 2022)
-    player_data_dict = {}
-
+    thread_list = []
     for year in years:
-        data = year_scrape(pos, year)
-        if len(data) > 0:
-            player_data_dict[str(year)] = data
-        else:
-            return player_data_dict
+        year_dict = {}
+        t = threading.Thread(target=year_helper, args=[pos, year, year_dict, player_data_dict])
+        t.start()
+        thread_list.append(t)
 
-    return player_data_dict
+    for thread in thread_list:
+        thread.join()
 
-def year_scrape(pos, year):
+def year_helper(pos, year, year_dict, player_data_dict):
+    print(f'Scraping {year} {pos} stats...')
+    year_scrape(pos, year, year_dict)
+    print(f'Completed scraping {year} {pos} stats.')
+    if len(year_dict) > 0:
+        player_data_dict[str(year)] = year_dict
+
+def year_scrape(pos, year, year_dict):
     weeks = range(1, 19)
-    year_dict = {}
+    thread_list = []
 
     for week in weeks:
-        data = week_scrape(pos, year, week)
-        if len(data) > 0:
-            year_dict['week_' + str(week)] = data
-        else:
-            return year_dict
+        week_dict = {}
+        t = threading.Thread(target=week_helper, args=[pos, year, week, week_dict, year_dict])
+        t.start()
+        thread_list.append(t)
 
-    return year_dict
+    for thread in thread_list:
+        thread.join()
 
-def week_scrape(pos, year, week):
-    week_dict = {}
+def week_helper(pos, year, week, week_dict, year_dict):
+    week_scrape(pos, year, week, week_dict)
+    if len(week_dict) > 0:
+        year_dict['week_' + str(week)] = week_dict
+
+def week_scrape(pos, year, week, week_dict):
     base_url = 'https://www.footballdb.com/fantasy-football/index.html?pos='
     url = base_url + pos + '&yr=' + str(year) + '&wk=' + str(week) + '&rules=2'
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
@@ -56,7 +76,7 @@ def week_scrape(pos, year, week):
     name_trs = name_tbody.find_all('tr')
 
     if len(name_trs) < 1:
-        return week_dict
+        return
     else:
         for name_tr in name_trs:
             name_div = name_tr.find('span', attrs={'class': 'hidden-xs'})
@@ -88,11 +108,11 @@ def week_scrape(pos, year, week):
 
             week_dict[name] = player_dict
 
-    return week_dict
-
 if __name__ == '__main__':
+    start = time.perf_counter()
     scrape()
-
+    finish = time.perf_counter()
+    print(f'Finished in {round(finish - start, 2)} second(s).')
 
 
 
