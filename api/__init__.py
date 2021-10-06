@@ -2,21 +2,22 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 import os
+import config
 
 app = Flask(__name__)
 
-ENV = 'dev'
-app = Flask(__name__)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-if ENV == 'dev':
+app = Flask(__name__, static_folder=os.path.abspath('Users/NolanRoth/Desktop/FFBRestApi'))
+app.config['SECRET_KEY'] = config.app_secret_key
+DEV_ENV = True
+
+if DEV_ENV:
 	app.debug = True
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
+	app.config['SQLALCHEMY_DATABASE_URI'] = config.dev_database_uri
 else:
 	app.debug = False
 	app.config['SQLALCHEMY_DATABASE_URI'] = ''
 
-
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 

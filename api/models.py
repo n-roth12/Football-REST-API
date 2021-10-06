@@ -1,5 +1,12 @@
 from api import db, ma
 
+class User(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	public_id = db.Column(db.String(50), unique=True)
+	username = db.Column(db.String(50))
+	password = db.Column(db.String(80))
+	admin = db.Column(db.Boolean)
+
 # This class stores the data about the last time the database was updated
 class MetaData(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -35,29 +42,6 @@ class PlayerGameStats(db.Model):
 		recieving_2point_conversions: int, fumbles_lost: int, fantasy_points: float) -> None:
 
 		self.game = game
-		self.passing_attempts = passing_attempts
-		self.passing_completions = passing_completions
-		self.passing_yards = passing_yards
-		self.passing_touchdowns = passing_touchdowns
-		self.passing_interceptions = passing_interceptions
-		self.passing_2point_conversions = passing_2point_conversions
-		self.rushing_attempts = rushing_attempts
-		self.rushing_yards = rushing_yards
-		self.rushing_touchdowns = rushing_touchdowns
-		self.rushing_2point_conversions = rushing_2point_conversions
-		self.receptions = receptions
-		self.recieving_yards = recieving_yards
-		self.recieving_touchdowns = recieving_touchdowns
-		self.recieving_2point_conversions = recieving_2point_conversions
-		self.fumbles_lost = fumbles_lost
-		self.fantasy_points = fantasy_points
-
-	def __init__(self, passing_attempts: int, passing_completions: int, passing_yards: int,
-		passing_touchdowns: int, passing_interceptions: int,
-		passing_2point_conversions: int, rushing_attempts: int, rushing_yards: int, rushing_touchdowns: int,
-		rushing_2point_conversions: int, receptions: int, recieving_yards: int, recieving_touchdowns: int,
-		recieving_2point_conversions: int, fumbles_lost: int, fantasy_points: float) -> None:
-
 		self.passing_attempts = passing_attempts
 		self.passing_completions = passing_completions
 		self.passing_yards = passing_yards
@@ -157,6 +141,11 @@ class YearSchema(ma.SQLAlchemySchema):
 	id = ma.auto_field()
 	year_number = ma.auto_field()
 	weeks = ma.auto_field()
+
+
+
+
+
 
 
 

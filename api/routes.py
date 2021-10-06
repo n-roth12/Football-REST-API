@@ -1,11 +1,12 @@
 from api import app
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, make_response
 from sqlalchemy.sql import func
 from sqlalchemy import desc
 from api import db, ma
 import json
 from api.models import PlayerGameStats, Week, Year, Player
 from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, TopPlayerSchema
+from werkzeug.security import generate_password_hash, check_password_hash
 
 stat_categories = ['passing_attempts', 'passing_completions',
 			'passing_yards', 'passing_touchdowns',
@@ -77,7 +78,7 @@ def get_week(name: str, year: int, week: int) -> dict:
 			return jsonify(player_game_stat_schema.dump(season_stats)), 200
 	else:
 		# Query to sum the weekly stats for a player across all years played
-		career_stats = db.session.query(Player, Week, Year, func.sum(PlayerGameStats.passing_attempts),
+		career_stats = db.session.query(Player, func.sum(PlayerGameStats.passing_attempts),
 			func.sum(PlayerGameStats.passing_completions),
 			func.sum(PlayerGameStats.passing_yards),
 			func.sum(PlayerGameStats.passing_touchdowns),
@@ -92,13 +93,16 @@ def get_week(name: str, year: int, week: int) -> dict:
 			func.sum(PlayerGameStats.recieving_touchdowns),
 			func.sum(PlayerGameStats.recieving_2point_conversions),
 			func.sum(PlayerGameStats.fumbles_lost),
-			func.sum(PlayerGameStats.fantasy_points)).filter(
+			func.sum(PlayerGameStats.fantasy_points)).join(Week, Year).filter(
 			PlayerGameStats.week_id == Week.id,
 			Week.year_id == Year.id,
 			Year.player_id == Player.id,
-			Player.name == name).first()
+			Player.name == name).group_by(Player.id).first()
 		# Feeding the results of the query back into PlayerGameStats object
-		result = PlayerGameStats(career_stats[3],
+		result = PlayerGameStats(None,
+			career_stats[1],
+			career_stats[2],
+			career_stats[3],
 			career_stats[4],
 			career_stats[5],
 			career_stats[6],
@@ -111,9 +115,7 @@ def get_week(name: str, year: int, week: int) -> dict:
 			career_stats[13],
 			career_stats[14],
 			career_stats[15],
-			career_stats[16],
-			career_stats[17],
-			career_stats[18])
+			career_stats[16])
 		return jsonify(player_game_stat_schema.dump(result)), 200
 
 # Route to return the top fantasy performers of a specific position from a specific week
@@ -141,7 +143,9 @@ def get_pos_top(year: int, week: int, pos: str) -> list[dict]:
 			return jsonify({"Error": "Year or week requested is invalid."}), 404
 	else:
 		# Query to sum the weekly stats for all players across all years played
-		top_players = db.session.query(Player, Week, Year, func.sum(PlayerGameStats.passing_attempts),
+		# right now it actually finds the best performances of the year
+		top_players = db.session.query(Player,
+			func.sum(PlayerGameStats.passing_attempts),
 			func.sum(PlayerGameStats.passing_completions),
 			func.sum(PlayerGameStats.passing_yards),
 			func.sum(PlayerGameStats.passing_touchdowns),
@@ -156,17 +160,20 @@ def get_pos_top(year: int, week: int, pos: str) -> list[dict]:
 			func.sum(PlayerGameStats.recieving_touchdowns),
 			func.sum(PlayerGameStats.recieving_2point_conversions),
 			func.sum(PlayerGameStats.fumbles_lost),
-			func.sum(PlayerGameStats.fantasy_points)).filter(
+			func.sum(PlayerGameStats.fantasy_points)).join(Week, Year).filter(
 			PlayerGameStats.week_id == Week.id,
 			Week.year_id == Year.id,
 			Year.year_number == year,
 			Year.player_id == Player.id).group_by(Player.id).order_by(desc(func.sum(PlayerGameStats.fantasy_points))).all()
 		if not len(top_players):
-			return jsonify({"Error": "No data for the year requested."})
+			return jsonify({"Error": "No data for the year requested."}), 404
 		result= []
 		for i in range(len(top_players)):
 			# Feeding the results of the query back into a PlayerGameStats object
-			game_stats = PlayerGameStats(top_players[i][3],
+			game_stats = PlayerGameStats(None,
+				top_players[i][1],
+				top_players[i][2],
+				top_players[i][3],
 				top_players[i][4],
 				top_players[i][5],
 				top_players[i][6],
@@ -179,11 +186,27 @@ def get_pos_top(year: int, week: int, pos: str) -> list[dict]:
 				top_players[i][13],
 				top_players[i][14],
 				top_players[i][15],
-				top_players[i][16],
-				top_players[i][17],
-				top_players[i][18])
+				top_players[i][16])
 			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][0].name, "stats": game_stats}))
 		return jsonify(result), 200
+
+@app.route('/api/top_performances/<year>', methods=['GET'])
+def get_top_performances(year: int) -> list[dict]:
+	top_players = db.session.query(Player, PlayerGameStats, Week, Year).filter(
+		PlayerGameStats.week_id == Week.id,
+		Week.year_id == Year.id,
+		Year.year_number == year,
+		Year.player_id == Player.id).order_by(desc(PlayerGameStats.fantasy_points)).all()
+	if len(top_players):
+		result = []
+		for i in range(len(top_players)):
+			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][0].name, "stats": top_players[i][1]}))
+		return jsonify(result), 200
+	else:
+		return jsonify({"Error": "No data for the year requested."}), 404
+
+
+
 
 
 

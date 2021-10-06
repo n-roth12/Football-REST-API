@@ -19,7 +19,9 @@ def build():
 		print('Adding ' + position + 's to database...')
 
 		for year in years:
+			print(year)
 			for week in weeks:
+				print(week)
 				for name in data[str(year)]["week_" + str(week)]:
 
 					p1 = db.session.query(Player).filter(Player.name == name, Player.position == position).first()
@@ -70,7 +72,3 @@ def build():
 
 if __name__ == '__main__':
 	build()
-
-
-
-
