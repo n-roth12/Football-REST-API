@@ -3,7 +3,13 @@ from api import db, ma
 import json
 from collections import OrderedDict
 
-def build():
+"""
+This script is responsible for constructing the database for use of the API
+using the json files output by scrape_stats.py. All 4 json files must be present
+in the directory in order for the database to be properly constructed.
+"""
+
+def build() -> None:
 	years = range(2012, 2021)
 	weeks = range(1, 18)
 	positions = ['QB', 'RB', 'WR', 'TE']
@@ -25,21 +31,21 @@ def build():
 				for week in weeks:
 					for name in data[str(year)]["week_" + str(week)]:
 
-						p1 = db.session.query(Player).filter(Player.name == name, Player.position == position).first()
-						if p1 == None:
+						player_object = db.session.query(Player).filter(Player.name == name, Player.position == position).first()
+						if player_object == None:
 							new_player = Player(name=name, position=position)
-							p1 = new_player
-							db.session.add(p1)
+							player_object = new_player
+							db.session.add(player_object)
 
-						y1 = db.session.query(Year).filter(Year.year_number == year, Year.player == p1).first()
-						if y1 == None:
+						year_object = db.session.query(Year).filter(Year.year_number == year, Year.player == p1).first()
+						if year_object == None:
 							new_year = Year(year_number=year)
-							new_year.player = p1
-							y1 = new_year
-							db.session.add(y1)
+							new_year.player = player_object
+							year_object = new_year
+							db.session.add(year_object)
 
 						new_week = Week(week_number=week)
-						new_week.year = y1
+						new_week.year = year_object
 						db.session.add(new_week)
 
 						stat_data = data[str(year)]["week_" + str(week)][name]

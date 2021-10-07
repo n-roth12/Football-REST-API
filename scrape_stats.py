@@ -3,9 +3,16 @@ import json
 import time
 import threading
 from bs4 import BeautifulSoup
-from time import sleep
 
-def scrape():
+"""
+This script is responsible for scraping player statistics from the web and outputs
+4 files into this directory that contains the scraped data. It scrapes the data
+for QB, RB, WR, and TE positions only, and it does so by parsing html from footballdb.com.
+The 4 json files that are output by this script can be used to create and/or update the
+database being used by the API. 
+"""
+
+def scrape() -> None:
     positions = ['QB', 'RB', 'WR', 'TE']
     print('Scraping NFL player game stats ...')
     thread_list = []
@@ -21,14 +28,14 @@ def scrape():
 
     print('Completed scraping all NFL player game stats.')
 
-def pos_helper(pos, player_data_dict):
+def pos_helper(pos: str, player_data_dict: dict) -> None:
     print(f'Scraping {pos} data...')
     pos_scrape(pos, player_data_dict)
     print(f'Completed scraping {pos} data.')
     with open(pos + "_data.json", "w") as outfile:
         json.dump(player_data_dict, outfile)
 
-def pos_scrape(pos, player_data_dict):
+def pos_scrape(pos: str, player_data_dict: dict) -> None:
     years = range(2012, 2022)
     thread_list = []
     for year in years:
@@ -40,14 +47,14 @@ def pos_scrape(pos, player_data_dict):
     for thread in thread_list:
         thread.join()
 
-def year_helper(pos, year, year_dict, player_data_dict):
+def year_helper(pos: str, year: int, year_dict: dict, player_data_dict: dict) -> None:
     print(f'Scraping {year} {pos} stats...')
     year_scrape(pos, year, year_dict)
     print(f'Completed scraping {year} {pos} stats.')
     if len(year_dict) > 0:
         player_data_dict[str(year)] = year_dict
 
-def year_scrape(pos, year, year_dict):
+def year_scrape(pos: str, year: int, year_dict: dict) -> None:
     weeks = range(1, 19)
     thread_list = []
 
@@ -60,12 +67,12 @@ def year_scrape(pos, year, year_dict):
     for thread in thread_list:
         thread.join()
 
-def week_helper(pos, year, week, week_dict, year_dict):
+def week_helper(pos: str, year: int, week: int, week_dict: dict, year_dict: dict) -> None:
     week_scrape(pos, year, week, week_dict)
     if len(week_dict) > 0:
         year_dict['week_' + str(week)] = week_dict
 
-def week_scrape(pos, year, week, week_dict):
+def week_scrape(pos: str, year: int, week: int, week_dict: dict) -> None:
     base_url = 'https://www.footballdb.com/fantasy-football/index.html?pos='
     url = base_url + pos + '&yr=' + str(year) + '&wk=' + str(week) + '&rules=2'
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
@@ -74,14 +81,13 @@ def week_scrape(pos, year, week, week_dict):
         try:
             results = requests.get(url, headers=headers)
         except requests.exceptions.ConnectionError:
-            sleep(0.005)
+            time.sleep(0.005)
         else:
             break
     else:
         print(f'Unable to scrape {pos} stats for {year} week {week}. Please try again.')
 
     soup = BeautifulSoup(results.text, 'html.parser')
-
     name_table = soup.find_all('table', attrs={'class': ['statistics', 'scrollable', 'tablesorter']})
     name_tbody = name_table[0].find('tbody')
     name_trs = name_tbody.find_all('tr')
