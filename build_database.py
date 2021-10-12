@@ -37,7 +37,7 @@ def build() -> None:
 							player_object = new_player
 							db.session.add(player_object)
 
-						year_object = db.session.query(Year).filter(Year.year_number == year, Year.player == p1).first()
+						year_object = db.session.query(Year).filter(Year.year_number == year, Year.player == player_object).first()
 						if year_object == None:
 							new_year = Year(year_number=year)
 							new_year.player = player_object

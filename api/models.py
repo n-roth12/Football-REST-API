@@ -4,7 +4,7 @@ class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	public_id = db.Column(db.String(50), unique=True)
 	username = db.Column(db.String(50))
-	password = db.Column(db.String(80))
+	password = db.Column(db.String(256))
 	admin = db.Column(db.Boolean)
 
 # This class stores the data about the last time the database was updated

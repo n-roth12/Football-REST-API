@@ -10,76 +10,152 @@
 	</head>
 
 	<body>
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }}">
+						<button type="button" class="m1-2 mb-1 close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						{{ message }}
+					</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
 		<header>
 			<div class="header-div">
-				<h1 class="text-center"><i class="fas fa-football-ball"></i>        Welcome to FFBProject API   </h1>
+				<h1 class="text-center"><i class="fas fa-football-ball"></i> Welcome to FFBProject API</h1>
 				<h4 class="text-center">An API for retrieving information about NFL players and performances</h4>
 			</div>
 		</header>
+		{% include 'includes/modals.html' %}
 		<div class="container">
-			<div class="content">
-				<div>
-					<h3>API Endpoints</h3>
-					<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
-					<hr>
-					<div>
-						<p><strong>/players/&ltpos&gt</strong> : Returns the list of all players in the database.</p>
-						<ul>
-							<li>Parameters: Pos</li>
-							<ul>
-								<li>Pos (Optional) : The position of players to be returned. Options are QB, RB, WR, TE. If no position is specified, players of all four positions will be returned.</li>
-							</ul>
-							<li><a href="/api/players">Sample Response</a></li>
-						</ul>
+			<div class="row">
+				<div class="main col-md-10">
+					<div class="content">
+						<section id="section-1">
+							<h3>Getting Started</h3>
+							<hr>
+							<div>
+								<p>
+									This is an API for fetching statistics about NFL player performances. 
+									It allows users to fetch stats about the specific performances of players,
+									the career totals of players, as well as the top fantasy football performers.
+								</p>
+							</div>
+							<div>
+								<p>
+									If this is your first time using the API, you must register, which you can 
+									do by clicking <a href="" data-toggle="modal" data-target="#Modal-Register">here</a>.
+								</p>
+								<p>
+									In order to use this API, you must first request an access token, which will
+									allow you to make requests and does not expire. To retrieve an access token,
+									send a GET request to <strong>http://127.0.0.1:5000/api/login</strong> 
+									using HTTP Basic Authentication with your username and password as the authorization
+									parameters. The request will return your access token. Alternatively, you can
+									click <a href="" data-toggle="modal" data-target="#Modal-Login">here</a> to login
+									and retrieve your access token.
+								</p>
+								<p>
+									After retrieving your access token, you can make a request to any of the endpoints
+									below using your access token as the value of the key "x-access-token" in your
+									request header.
+								</p>
+							</div>
+						</section>
 					</div>
-					<hr>
-					<div>
-						<p><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player.</p>
-						<ul>
-							<li>Parameters : Name, Year, Week</li>
-							<ul>
-								<li>Name (Required) : The name of the player whose stats will be returned. Format as Firstname_Lastname.</li>
-								<li>Year (Optional) : The year from which to return stats. If year is not specified, the career total stats for the specified player will be returned.</li>
-								<li>Week (Optional) : The week of the season from which to return stats. If week is not specified, the season total stats of the specified year will be returned.</li>
-							</ul>
-							<li><a href="/api/stats/Dalvin_Cook/2019/6">Sample Response</a></li>
-						</ul>
+
+					<div class="content">
+						<section id="section-2">
+							<h3>API Endpoints</h3>
+							<p>The base URL for all endpoints is <strong>http://127.0.0.1:5000/api</strong></p>
+							<hr>
+							<div>
+								<p><strong>/players/&ltpos&gt</strong> : Returns the list of all players in the database.</p>
+								<ul>
+									<li>Parameters: Pos</li>
+									<ul>
+										<li>Pos (Optional) : The position of players to be returned. Options are QB, RB, WR, TE. If no position is specified, players of all four positions will be returned.</li>
+									</ul>
+									<li><a href="/api/players">Sample Response</a></li>
+								</ul>
+							</div>
+							<hr>
+							<div>
+								<p><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player.</p>
+								<ul>
+									<li>Parameters : Name, Year, Week</li>
+									<ul>
+										<li>Name (Required) : The name of the player whose stats will be returned. Format as Firstname_Lastname.</li>
+										<li>Year (Optional) : The year from which to return stats. If year is not specified, the career total stats for the specified player will be returned.</li>
+										<li>Week (Optional) : The week of the season from which to return stats. If week is not specified, the season total stats of the specified year will be returned.</li>
+									</ul>
+									<li><a href="/api/stats/Dalvin_Cook/2019/6">Sample Response</a></li>
+								</ul>
+							</div>
+							<hr>
+							<div>
+								<p><strong>/top/&ltyear&gt/&ltweek&gt/&ltpos&gt</strong> : Returns the stats of players ordered by fantasy points finish.</p>
+								<ul>
+									<li>Parameters : Year, Week, Pos</li>
+									<ul>
+										<li>Year (Required) : The year from which to return stats.</li>
+										<li>Week (Optional) : The week from which to return stats. If the week is not specified, the season totals for the specified player will be returned.</li>
+										<li>Pos (Optional) : The position to filter players by. The options are QB, RB, WR, and TE. If the position is not specified, the stats from all players will be returned.</li>
+									</ul>
+									<li><a href="/api/top/2020/8/te">Sample Response</a></li>
+								</ul>
+							</div>
+							<hr>
+							<div>
+								<p><strong>/top_performances/&ltyear&gt</strong> : Returns the top weekly performances by fantasy points for the specified season.</p>
+								<ul>
+									<li>Parameters : Year</li>
+									<ul>
+										<li>Year (Required) : The year from which to return stats.</li>
+									</ul>
+									<li><a href="/api/top_performances/2019">Sample Response</a></li>
+								</ul>
+							</div>
+						</section>
 					</div>
-					<hr>
-					<div>
-						<p><strong>/top/&ltyear&gt/&ltweek&gt/&ltpos&gt</strong> : Returns the stats of players ordered by fantasy points finish.</p>
-						<ul>
-							<li>Parameters : Year, Week, Pos</li>
-							<ul>
-								<li>Year (Required) : The year from which to return stats.</li>
-								<li>Week (Optional) : The week from which to return stats. If the week is not specified, the season totals for the specified player will be returned.</li>
-								<li>Pos (Optional) : The position to filter players by. The options are QB, RB, WR, and TE. If the position is not specified, the stats from all players will be returned.</li>
-							</ul>
-							<li><a href="/api/top/2020/8/te">Sample Response</a></li>
-						</ul>
-					</div>
-					<hr>
-					<div>
-						<p><strong>/top_performances/&ltyear&gt</strong> : Returns the top weekly performances by fantasy points for the specified season.</p>
-						<ul>
-							<li>Parameters : Year</li>
-							<ul>
-								<li>Year (Required) : The year from which to return stats.</li>
-							</ul>
-							<li><a href="/api/top_performances/2019">Sample Response</a></li>
-						</ul>
+
+					<div class="content">
+						<section id="section-3">
+							<h3>Notes</h3>
+							<hr>
+							<div>
+								<ul>
+									<li>Only data between the years 2012 to 2021 and the weeks 1 to 17 (18 for 2021) can be retrieved.</li>
+									<li>In addition, data is only available for the offensive skill-position players (QB, RB, WR, TE).
+									</li>
+									<li><a href="https://github.com/n-roth12/Football-REST-API">GitHub Repository</a></li>
+								</ul>
+							</div>
+						</section>
 					</div>
 				</div>
-				<hr>
-				<div>
-					<h3>Notes</h3>
-					<ul>
-						<li>Only data between the years 2012 to 2021 and the weeks 1 to 17 (18 for 2021) can be retrieved.</li>
-						<li>In addition, data is only available for the offensive skill-position players (QB, RB, WR, TE).
-						</li>
-						<li><a href="https://github.com/n-roth12/Football-REST-API">GitHub Repository</a></li>
-					</ul>
+
+				<div class="sticky-nav col-md-2">
+					<div class="content">
+						<div>
+							<a href="" data-toggle="modal" data-target="#Modal-Register">Register</a>
+						</div>
+						<hr>
+						<div>
+							<a href="" data-toggle="modal" data-target="#Modal-Login">Login</a>
+						</div>
+						<hr>
+						<div class="nav-links">
+							<a href="#section-1">Getting Started</a>
+							<a href="#section-2">API Endpoints</a>
+							<a href="#section-3">Notes</a>
+						</div>
+					</div>
+
 				</div>
+
 			</div>
 		</div>
 
@@ -90,44 +166,65 @@
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
 	</body>
-<style>
-	@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
-	body {
-		background-color: #f7f7f7;
-		font-family: 'Inter', sans-serif;
-	}
-	h1, h4, i {
-		color: #f7f7f7;
-	}
-	hr {
-		background-color: #000080;
-		opacity: 20%;
-	}
-	.header-div {
-		padding: 40px;
-	}
-	header {
-		background-color: #000080;
-		color: white;
-		box-shadow: 0px 0px 1px 1px black;
-		height: 300px;
-		margin-bottom: -150px;
-	}
-	.content {
-		margin-top: 30px;
-		margin-bottom: 30px;
-		background-color: white;
-		box-shadow: 0px 0px 1px 1px lightgrey;
-		border-radius: 10px;
-		padding: 20px;
-	}
-	strong {
-		font-family: monospace;
-	}
-	ul {
-		list-style-type: circle;
-	}
-</style>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+		body {
+			background-color: #f7f7f7;
+			font-family: 'Inter', sans-serif;
+		}
+		h1, h4, i {
+			color: #f7f7f7;
+		}
+		hr {
+			background-color: #000080;
+			opacity: 20%;
+		}
+		.header-div {
+			padding: 40px;
+		}
+		header {
+			background-color: #000080;
+			color: white;
+			box-shadow: 0px 0px 1px 1px black;
+			height: 300px;
+			margin-bottom: -150px;
+		}
+		.content {
+			margin-top: 30px;
+			margin-bottom: 30px;
+			background-color: white;
+			box-shadow: 0px 0px 1px 1px lightgrey;
+			border-radius: 10px;
+			padding: 20px;
+		}
+		strong {
+			font-family: monospace;
+		}
+		ul {
+			list-style-type: circle;
+		}
+		.sticky-nav {
+			position: sticky;
+			top: 0;
+
+		}
+		.sticky-nav a {
+			display: block;
+			text-decoration: None;
+			margin-top: 10px;
+		}
+		html {
+			scroll-behavior: smooth;
+		}
+	</style>
+
+	<script>
+		nav_links = document.querySelectorAll(".nav-links a");
+		content_sections = document.querySelectorAll(".main .content")
+
+		f
+
+	</script>
 </html>
 
 

@@ -12,6 +12,8 @@ requests = "*"
 bs4 = "*"
 selenium = "*"
 marshmallow = "*"
+pyjwt = "*"
+flask-wtf = "*"
 
 [dev-packages]
 
