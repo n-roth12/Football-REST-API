@@ -7,14 +7,12 @@ import config
 app = Flask(__name__)
 
 app = Flask(__name__, static_folder=os.path.abspath('Users/NolanRoth/Desktop/FFBRestApi'))
-app.config['SECRET_KEY'] = config.app_secret_key
-DEV_ENV = True
 
 try:
 	import config
 except ModuleNotFoundError:
 	app.debug = False
-	app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('PROD_DATABASE_URI')
+	app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 	app.config['SECRET_KEY'] = os.environ.get('APP_SECRET_KEY')	
 else:
 	app.debug = True
