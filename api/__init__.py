@@ -12,7 +12,7 @@ app = Flask(__name__, static_folder=os.path.abspath('Users/NolanRoth/Desktop/FFB
 #	import config
 #except ModuleNotFoundError:
 app.debug = False
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('PROD_DATABASE_URI')
 app.config['SECRET_KEY'] = os.environ.get('APP_SECRET_KEY')
 app.config['TEST_ACCESS_TOKEN'] = os.environ.get('TEST_ACCESS_TOKEN')	
 #else:
