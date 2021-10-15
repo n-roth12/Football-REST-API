@@ -4,9 +4,7 @@ from flask_marshmallow import Marshmallow
 import os
 import config
 
-app = Flask(__name__)
-
-app = Flask(__name__, static_folder=os.path.abspath('Users/NolanRoth/Desktop/FFBRestApi'))
+app = Flask(__name__, static_folder=os.path.abspath('/Users/NolanRoth/Desktop/FFBRestApi'))
 
 #try:
 #	import config
