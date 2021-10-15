@@ -12,6 +12,7 @@ import jwt
 import datetime
 import uuid
 from functools import wraps
+import requests
 
 stat_categories = ['passing_attempts', 'passing_completions',
 			'passing_yards', 'passing_touchdowns',
@@ -52,6 +53,7 @@ def token_required(f):
 
 	return decorated
 
+
 ##### Routes associated with fetching player data #####
 
 # Route to return players in the database
@@ -70,7 +72,7 @@ def get_players(current_user, pos: str) -> list[dict]:
 @app.route('/api/stats/<name>/<year>', defaults={'week': None}, methods=['GET'])
 @app.route('/api/stats/<name>/<year>/<week>', methods=['GET'])
 @token_required
-def get_week(name: str, year: int, week: int) -> dict:
+def get_week(current_user, name: str, year: int, week: int) -> dict:
 	names = name.split("_")
 	name = ' '.join(names)
 	player = db.session.query(Player).filter(Player.name == name).first()
@@ -147,7 +149,7 @@ def get_week(name: str, year: int, week: int) -> dict:
 @app.route('/api/top/<year>/<week>', defaults={'pos': None}, methods=['GET'])
 @app.route('/api/top/<year>/<week>/<pos>', methods=['GET'])
 @token_required
-def get_pos_top(year: int, week: int, pos: str) -> list[dict]:
+def get_pos_top(current_user, year: int, week: int, pos: str) -> list[dict]:
 	if week:
 		top_players = db.session.query(PlayerGameStats, Player, Week, Year).filter(
 			PlayerGameStats.week_id == Week.id,
@@ -217,7 +219,7 @@ def get_pos_top(year: int, week: int, pos: str) -> list[dict]:
 
 @app.route('/api/top_performances/<year>', methods=['GET'])
 @token_required
-def get_top_performances(year: int) -> list[dict]:
+def get_top_performances(current_user, year: int) -> list[dict]:
 	top_players = db.session.query(Player, PlayerGameStats, Week, Year).filter(
 		PlayerGameStats.week_id == Week.id,
 		Week.year_id == Year.id,
@@ -372,7 +374,29 @@ def home_page():
 
 	return render_template('index.html', register_form=register_form, login_form=login_form)
 
+@app.route('/api/sample/players', methods=['GET'])
+def test_players():
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get('http://127.0.0.1:5000/api/players', headers={'x-access-token': token})
+	return jsonify(result.json()[:5])
 
+@app.route('/api/sample/stats/Dalvin_Cook/2020/2', methods=['GET'])
+def test_stats():
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get('http://127.0.0.1:5000/api/stats/Dalvin_Cook/2020/2', headers={'x-access-token': token})
+	return jsonify(result.json())
+
+@app.route('/api/sample/top/2020/8/te', methods=['GET'])
+def test_top():
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get('http://127.0.0.1:5000/api/top/2020/8/te', headers={'x-access-token': token})
+	return jsonify(result.json()[:5])
+
+@app.route('/api/sample/top_performances/2019', methods=['GET'])
+def test_top_performances():
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get('http://127.0.0.1:5000/api/top_performances/2019', headers={'x-access-token':token})
+	return jsonify(result.json()[:5])
 
 
 
