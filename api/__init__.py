@@ -8,17 +8,18 @@ app = Flask(__name__)
 
 app = Flask(__name__, static_folder=os.path.abspath('Users/NolanRoth/Desktop/FFBRestApi'))
 
-try:
-	import config
-except ModuleNotFoundError:
-	app.debug = False
-	app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-	app.config['SECRET_KEY'] = os.environ.get('APP_SECRET_KEY')	
-else:
-	app.debug = True
-	app.config['SQLALCHEMY_DATABASE_URI'] = config.dev_database_uri
-	app.config['SECRET_KEY'] = config.app_secret_key
-	app.config['TEST_ACCESS_TOKEN'] = config.test_access_token
+#try:
+#	import config
+#except ModuleNotFoundError:
+app.debug = False
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SECRET_KEY'] = os.environ.get('APP_SECRET_KEY')
+app.config['TEST_ACCESS_TOKEN'] = os.environ.get('TEST_ACCESS_TOKEN')	
+#else:
+#	app.debug = True
+#	app.config['SQLALCHEMY_DATABASE_URI'] = config.dev_database_uri
+#	app.config['SECRET_KEY'] = config.app_secret_key
+#	app.config['TEST_ACCESS_TOKEN'] = config.test_access_token
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)

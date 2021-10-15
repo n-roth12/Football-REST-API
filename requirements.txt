@@ -22,9 +22,12 @@ MarkupSafe==2.0.1
 marshmallow==3.13.0
 marshmallow-sqlalchemy==0.26.1
 outcome==1.1.0
+pg==0.1
+Pillow==8.4.0
 psycopg2-binary==2.9.1
 pycparser==2.20
 PyJWT==2.2.0
+PyOpenGL==3.1.5
 pyOpenSSL==21.0.0
 requests==2.26.0
 selenium==4.0.0
