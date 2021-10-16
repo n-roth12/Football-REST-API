@@ -377,25 +377,25 @@ def home_page():
 @app.route('/api/sample/players', methods=['GET'])
 def test_players():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('http://127.0.0.1:5000/api/players', headers={'x-access-token': token})
+	result = requests.get('https://ffbrestapi.herokuapp.com/api/players', headers={'x-access-token': token})
 	return jsonify(result.json()[:5])
 
 @app.route('/api/sample/stats/Dalvin_Cook/2020/2', methods=['GET'])
 def test_stats():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('http://127.0.0.1:5000/api/stats/Dalvin_Cook/2020/2', headers={'x-access-token': token})
+	result = requests.get('https://ffbrestapi.herokuapp.com/api/stats/Dalvin_Cook/2020/2', headers={'x-access-token': token})
 	return jsonify(result.json())
 
 @app.route('/api/sample/top/2020/8/te', methods=['GET'])
 def test_top():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('http://127.0.0.1:5000/api/top/2020/8/te', headers={'x-access-token': token})
+	result = requests.get('https://ffbrestapi.herokuapp.com/api/top/2020/8/te', headers={'x-access-token': token})
 	return jsonify(result.json()[:5])
 
 @app.route('/api/sample/top_performances/2019', methods=['GET'])
 def test_top_performances():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('http://127.0.0.1:5000/api/top_performances/2019', headers={'x-access-token':token})
+	result = requests.get('https://ffbrestapi.herokuapp.com/api/top_performances/2019', headers={'x-access-token':token})
 	return jsonify(result.json()[:5])
 
 
