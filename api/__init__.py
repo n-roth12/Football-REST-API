@@ -20,7 +20,6 @@ app.config['TEST_ACCESS_TOKEN'] = os.environ.get('TEST_ACCESS_TOKEN')
 #	app.config['TEST_ACCESS_TOKEN'] = config.test_access_token
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-csrf = CSRFProtect(app)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
