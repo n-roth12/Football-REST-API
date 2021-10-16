@@ -11,7 +11,7 @@ app = Flask(__name__, static_folder=os.path.abspath('/Users/NolanRoth/Desktop/FF
 #except ModuleNotFoundError:
 app.debug = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('PROD_DATABASE_URI')
-app.config['SECRET_KEY'] = os.environ.get('APP_SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['TEST_ACCESS_TOKEN'] = os.environ.get('TEST_ACCESS_TOKEN')	
 #else:
 #	app.debug = True
@@ -20,6 +20,7 @@ app.config['TEST_ACCESS_TOKEN'] = os.environ.get('TEST_ACCESS_TOKEN')
 #	app.config['TEST_ACCESS_TOKEN'] = config.test_access_token
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+csrf = CSRFProtect(app)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
