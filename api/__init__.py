@@ -10,7 +10,7 @@ if os.environ.get('IS_HEROKU') == 'True':
 	app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('PROD_DATABASE_URI')
 	app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 	app.config['TEST_ACCESS_TOKEN'] = os.environ.get('TEST_ACCESS_TOKEN')
-	app.config['BASE_URL'] = os.environ.get(['BASE_URL'])
+	app.config['BASE_URL'] = os.environ.get('BASE_URL')
 else:
 	import config
 	app.debug = True
