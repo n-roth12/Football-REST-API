@@ -17,7 +17,6 @@ flask-wtf = "*"
 psycopg2-binary = "*"
 gunicorn = "*"
 uuid = "*"
-jwt = "*"
 pg = "*"
 
 [dev-packages]

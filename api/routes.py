@@ -65,6 +65,7 @@ def get_players(current_user, pos: str) -> list[dict]:
 		players = db.session.query(Player).all()
 	else:
 		players = db.session.query(Player).filter(Player.position == pos.upper()).all()
+	print(len(players))
 	return jsonify(players_schema.dump(players)), 200
 
 # Route to return the stats of a specific player from a specific week
@@ -377,25 +378,25 @@ def home_page():
 @app.route('/api/sample/players', methods=['GET'])
 def test_players():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('https://ffbrestapi.herokuapp.com/api/players', headers={'x-access-token': token})
-	return jsonify(result.json()[:5])
+	result = requests.get(f'{app.config["BASE_URL"]}/api/players', headers={'x-access-token': token})
+	return jsonify(result.json())
 
 @app.route('/api/sample/stats/Dalvin_Cook/2020/2', methods=['GET'])
 def test_stats():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('https://ffbrestapi.herokuapp.com/api/stats/Dalvin_Cook/2020/2', headers={'x-access-token': token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/stats/Dalvin_Cook/2020/2', headers={'x-access-token': token})
 	return jsonify(result.json())
 
 @app.route('/api/sample/top/2020/8/te', methods=['GET'])
 def test_top():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('https://ffbrestapi.herokuapp.com/api/top/2020/8/te', headers={'x-access-token': token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/top/2020/8/te', headers={'x-access-token': token})
 	return jsonify(result.json()[:5])
 
 @app.route('/api/sample/top_performances/2019', methods=['GET'])
 def test_top_performances():
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get('https://ffbrestapi.herokuapp.com/api/top_performances/2019', headers={'x-access-token':token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/top_performances/2019', headers={'x-access-token':token})
 	return jsonify(result.json()[:5])
 
 
