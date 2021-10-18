@@ -2,6 +2,7 @@ from api.models import PlayerGameStats, Player, Week, Year, MetaData
 from api import db, ma
 import json
 from collections import OrderedDict
+import time
 
 """
 This script is responsible for constructing the database for use of the API
@@ -15,8 +16,6 @@ def build() -> None:
 	positions = ['QB', 'RB', 'WR', 'TE']
 	max_year = 0
 	max_week = 0
-
-	print('Building database...')
 
 	for position in positions:
 		try:
@@ -72,15 +71,15 @@ def build() -> None:
 						db.session.commit()
 
 			print(f'Completed adding {position}s to database.')
-			if position == positions[0]:
-				print('Completed building database!')
 
 			f.close()
 
 if __name__ == '__main__':
+	start = time.perf_counter()
+	print('Building database from json files...')
 	build()
-
-
+	finish = time.perf_counter()
+	print(f'Finished building database in {round(finish - start, 2)} second(s).')
 
 
 

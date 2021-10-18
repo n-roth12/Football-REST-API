@@ -122,8 +122,8 @@ def week_scrape(pos: str, year: int, week: int, week_dict: dict) -> None:
                 'rec_2pts': int(stats[15]),
                 'fumbles_lost': int(stats[16])
             }
-
-            week_dict[name] = player_dict
+            if not (int(stats[2]) == int(stats[3]) == int(stats[4]) == int(stats[5]) == int(stats[6]) == int(stats[7]) == int(stats[8]) == int(stats[9]) == int(stats[10]) == int(stats[11]) == int(stats[12]) == int(stats[13]) == int(stats[14]) == int(stats[15]) == int(stats[16]) == 0):
+                week_dict[name] = player_dict
 
 if __name__ == '__main__':
     start = time.perf_counter()
