@@ -379,7 +379,7 @@ def home_page():
 def test_players():
 	token = app.config['TEST_ACCESS_TOKEN']
 	result = requests.get(f'{app.config["BASE_URL"]}/api/players', headers={'x-access-token': token})
-	return jsonify(result.json())
+	return jsonify(result.json()[:5])
 
 @app.route('/api/sample/stats/Dalvin_Cook/2020/2', methods=['GET'])
 def test_stats():
