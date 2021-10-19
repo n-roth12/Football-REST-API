@@ -23,7 +23,7 @@
 			{% endif %}
 		{% endwith %}
 		<header>
-			<div class="header-div">
+			<div id="header-inner">
 				<h1 class="text-center"><i class="fas fa-football-ball"></i> Welcome to FFBProject API</h1>
 				<h4 class="text-center">An API for retrieving information about NFL players and performances</h4>
 			</div>
@@ -31,7 +31,7 @@
 		{% include 'includes/modals.html' %}
 		<div class="container">
 			<div class="row">
-				<div class="main">
+				<div id="main">
 					<div class="content">
 						<section id="section-1">
 							<h3>Getting Started</h3>
@@ -179,7 +179,7 @@
 			background-color: #000080;
 			opacity: 20%;
 		}
-		.header-div {
+		#header-inner {
 			padding: 40px;
 		}
 		header {
@@ -187,7 +187,8 @@
 			color: white;
 			box-shadow: 0px 0px 1px 1px black;
 			height: 300px;
-			margin-bottom: -150px;
+			width: 100%;
+			margin-bottom: -10vh;
 		}
 		.content {
 			margin-top: 30px;
@@ -219,10 +220,6 @@
 	</style>
 
 	<script>
-		nav_links = document.querySelectorAll(".nav-links a");
-		content_sections = document.querySelectorAll(".main .content")
-
-		f
 
 	</script>
 </html>
