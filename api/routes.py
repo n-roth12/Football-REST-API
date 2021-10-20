@@ -14,12 +14,15 @@ import uuid
 from functools import wraps
 import requests
 
+# These are the stat categories used in the PlayerGameStats model 
 stat_categories = ['passing_attempts', 'passing_completions',
 			'passing_yards', 'passing_touchdowns',
 			'passing_interceptions', 'passing_2point_conversions',
 			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
 			'rushing_2point_conversions', 'receptions', 'recieving_yards',
 			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points']
+
+# These are the four positions of Players in the database
 positions = ['QB', 'RB', 'WR','TE']
 
 player_game_stat_schema = PlayerGameStatsSchema()
@@ -35,6 +38,10 @@ top_player_schema = TopPlayerSchema()
 def token_required(f):
 	@wraps(f)
 	def decorated(*args, **kwargs):
+		""" Decorator for handling required x-access-tokens.
+
+		Decoded token is used to find and return User in database. 
+		"""
 		token = None
 
 		if 'x-access-token' in request.headers:
@@ -46,6 +53,7 @@ def token_required(f):
 		try:
 			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms='HS256')
 			current_user = db.session.query(User).filter(User.public_id == data['public_id']).first()
+
 		except:
 			return jsonify({'Error' : 'Token is invalid.'}), 401
 
@@ -56,11 +64,17 @@ def token_required(f):
 
 ##### Routes associated with fetching player data #####
 
-# Route to return players in the database
 @app.route('/api/players', defaults={'pos': None}, methods=['GET'])
 @app.route('/api/players/<pos>', methods=['GET'])
 @token_required
 def get_players(current_user, pos: str) -> list[dict]:
+	""" Funciton to return the list of Players via the /players api endpoint.
+
+	Players can be filtered by position. If position is not specified, all players
+	in the database will be returned. Only Player name, id, position are returned.
+
+	User must provide a valid x-access-token to access this endpoint.
+	"""
 	if not pos:
 		players = db.session.query(Player).all()
 	else:
@@ -68,41 +82,60 @@ def get_players(current_user, pos: str) -> list[dict]:
 	print(len(players))
 	return jsonify(players_schema.dump(players)), 200
 
-# Route to return the stats of a specific player from a specific week
+
 @app.route('/api/stats/<name>', defaults={'year': None, 'week': None}, methods=['GET'])
 @app.route('/api/stats/<name>/<year>', defaults={'week': None}, methods=['GET'])
 @app.route('/api/stats/<name>/<year>/<week>', methods=['GET'])
 @token_required
 def get_week(current_user, name: str, year: int, week: int) -> dict:
+	""" Function to return the stats of Players via the /stats api endpoint.
+
+	Stats can be filtered by Player name, year, and week. If week is not specified,
+	the yearly stats are returned for the Player. If the year is not specified, the 
+	career stats are returned for the Player.
+
+	User must provide valid x-access-token to access this endpoint.
+	 """
 	names = name.split("_")
 	name = ' '.join(names)
 	player = db.session.query(Player).filter(Player.name == name).first()
+
 	if not player:
 		return jsonify({"Error": "Player not found in database."})
+
 	if year:
 		year_stats = db.session.query(Year).filter(Year.player_id == player.id, 
 			Year.year_number == year).first()
+
 		if not year_stats:
 			return jsonify({"Error": "No data found for this player for specified year."}), 404
+
 		if week:
 			week_stats = db.session.query(Week, PlayerGameStats).filter(
 				Week.year_id == year_stats.id,
 				Week.week_number == week,
 				PlayerGameStats.week_id == Week.id).first()
+
 			if not week_stats:
 				return ({"Error": "No data found for this player for the specified week."}), 404
+
 			return jsonify(player_game_stat_schema.dump(week_stats[1])), 200
+
 		else:
 			weeks = db.session.query(Week).filter(Week.year_id == year_stats.id).all()
 			season_stats = {}
 			for week in weeks:
 				game_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
+
 				for stat_category in stat_categories:
 					if stat_category in season_stats:
 						season_stats[stat_category] += getattr(game_stats, stat_category)
+
 					else:
 						season_stats[stat_category] = getattr(game_stats, stat_category)
+
 			return jsonify(player_game_stat_schema.dump(season_stats)), 200
+	
 	else:
 		# Query to sum the weekly stats for a player across all years played
 		career_stats = db.session.query(Player, func.sum(PlayerGameStats.passing_attempts),
@@ -125,6 +158,7 @@ def get_week(current_user, name: str, year: int, week: int) -> dict:
 			Week.year_id == Year.id,
 			Year.player_id == Player.id,
 			Player.name == name).group_by(Player.id).first()
+
 		# Feeding the results of the query back into PlayerGameStats object
 		result = PlayerGameStats(None,
 			career_stats[1],
@@ -145,12 +179,20 @@ def get_week(current_user, name: str, year: int, week: int) -> dict:
 			career_stats[16])
 		return jsonify(player_game_stat_schema.dump(result)), 200
 
-# Route to return the top fantasy performers of a specific position from a specific week
+
 @app.route('/api/top/<year>', defaults={'week': None, 'pos': None}, methods=['GET'])
 @app.route('/api/top/<year>/<week>', defaults={'pos': None}, methods=['GET'])
 @app.route('/api/top/<year>/<week>/<pos>', methods=['GET'])
 @token_required
-def get_pos_top(current_user, year: int, week: int, pos: str) -> list[dict]:
+def get_pos_top(current_user: User, year: int, week: int, pos: str) -> list[dict]:
+	""" Function to return the top weekly performances via the /top api endpoint.
+
+	Performances can be filtered by year, week, and position. If week is not specified,
+	the yearly stats of Players will be returned. Results are ordered by fantasy points
+	scored. 
+
+	User must provide valid x-access-token to access this endpoint.
+	"""
 	if week:
 		top_players = db.session.query(PlayerGameStats, Player, Week, Year).filter(
 			PlayerGameStats.week_id == Week.id,
@@ -158,17 +200,23 @@ def get_pos_top(current_user, year: int, week: int, pos: str) -> list[dict]:
 			Week.year_id == Year.id,
 			Year.year_number == year,
 			Year.player_id == Player.id)
+
 		if pos:
-			top_players = top_players.filter(Player.position == pos.upper()).order_by(PlayerGameStats.fantasy_points.desc()).all()
+			top_players = top_players.filter(Player.position == pos.upper()).order_by(
+				PlayerGameStats.fantasy_points.desc()).all()
 		else:
 			top_players = top_players.order_by(PlayerGameStats.fantasy_points.desc()).all()
+
 		if top_players:
 			result = []
 			for i in range(len(top_players)):
-				result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][1].name, "stats": top_players[i][0]}))
+				result.append(top_player_schema.dump({"rank": i + 1, 
+					"name": top_players[i][1].name, "stats": top_players[i][0]}))
 			return jsonify(result), 200
+
 		else:
 			return jsonify({"Error": "Year or week requested is invalid."}), 404
+
 	else:
 		# Query to sum the weekly stats for all players across all years played
 		# right now it actually finds the best performances of the year
@@ -193,9 +241,11 @@ def get_pos_top(current_user, year: int, week: int, pos: str) -> list[dict]:
 			Week.year_id == Year.id,
 			Year.year_number == year,
 			Year.player_id == Player.id).group_by(Player.id).order_by(desc(func.sum(PlayerGameStats.fantasy_points))).all()
+
 		if not len(top_players):
 			return jsonify({"Error": "No data for the year requested."}), 404
-		result= []
+
+		result = []
 		for i in range(len(top_players)):
 			# Feeding the results of the query back into a PlayerGameStats object
 			game_stats = PlayerGameStats(None,
@@ -215,31 +265,53 @@ def get_pos_top(current_user, year: int, week: int, pos: str) -> list[dict]:
 				top_players[i][14],
 				top_players[i][15],
 				top_players[i][16])
-			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][0].name, "stats": game_stats}))
+
+			result.append(top_player_schema.dump({"rank": i + 1, 
+				"name": top_players[i][0].name, "stats": game_stats}))
+
 		return jsonify(result), 200
+
 
 @app.route('/api/top_performances/<year>', methods=['GET'])
 @token_required
-def get_top_performances(current_user, year: int) -> list[dict]:
+def get_top_performances(current_user: User, year: int) -> list[dict]:
+	""" Function to return the top perfomances for a given year via the 
+	/top_performances api endpoint.
+
+	A perfomance is defined as the weekly stats of a player, and top performances
+	are ordered by fantasy points scored for the week, so the function returns
+	the weekly stats of all players for a year ordered by fantasy points scored.
+
+	User must provide valid x-access-token to access this endpoint.
+	"""
 	top_players = db.session.query(Player, PlayerGameStats, Week, Year).filter(
 		PlayerGameStats.week_id == Week.id,
 		Week.year_id == Year.id,
 		Year.year_number == year,
 		Year.player_id == Player.id).order_by(desc(PlayerGameStats.fantasy_points)).all()
+
 	if len(top_players):
 		result = []
 		for i in range(len(top_players)):
-			result.append(top_player_schema.dump({"rank": i + 1, "name": top_players[i][0].name, "stats": top_players[i][1]}))
+			result.append(top_player_schema.dump({"rank": i + 1, 
+				"name": top_players[i][0].name, "stats": top_players[i][1]}))
 		return jsonify(result), 200
+
 	else:
 		return jsonify({"Error": "No data for the year requested."}), 404
 
 
-####### Routes associated with user information ########
-
 @app.route('/api/user', methods=['POST'])
 @token_required
-def create_user(current_user):
+def create_user(current_user: User) -> str:
+	""" Function to create a new User via the /user api endpoint.
+
+	User must be an admin to successfully create a new User. The username and 
+	password of the new User must be passed in the body of the request. Password
+	is hashed and then stored. A public_id is randomly generated for the new User.
+	If User creation is successful, the new User is added to the database.
+	Returns only a message specifying if creation of new User was successful.
+	"""
 	if not current_user.admin:
 		return jsonify({'Error' : 'Not authorized to perform that function.'})
 
@@ -247,15 +319,24 @@ def create_user(current_user):
 
 	hashed_password = generate_password_hash(data['password'], method='sha256')
 
-	new_user = User(public_id=str(uuid.uuid4()), username=data['name'], password=hashed_password, admin=False)
+	new_user = User(public_id=str(uuid.uuid4()), username=data['name'], 
+		password=hashed_password, admin=False)
+
 	db.session.add(new_user)
 	db.session.commit()
 
 	return jsonify({'message': 'New user successfully created.'})
 
+
 @app.route('/api/promote_user/<public_id>', methods=['PUT'])
 @token_required
-def promote_user(current_user, public_id):
+def promote_user(current_user: User, public_id: str) -> str:
+	""" Function to promote a User to admin via the /promote_user api endpoint.
+
+	User must be an admin to successfully promote another User. User to promote 
+	is specified by the Users publid_id. Function only returns a message specifying
+	whether promotion was successful. 
+	"""
 	if not current_user.admin:
 		return jsonify({'Error' : 'Not authorized to perform that function.'})
 
@@ -273,7 +354,13 @@ def promote_user(current_user, public_id):
 @app.route('/api/user', defaults={'public_id': None}, methods=['GET'])
 @app.route('/api/user/<public_id>', methods=['GET'])
 @token_required
-def get_users(current_user, public_id):
+def get_users(current_user: User, public_id: str) -> str:
+	""" Function to handle fetching the Users from the database via the /user
+	api endpoint. 
+
+	User must be an admin to successfully retrieve Users. If User is admin,
+	the function returns the list of Users in the database.
+	"""
 	if not current_user.admin:
 		return jsonify({'Error' : 'Not authorized to perform that function.'})
 
@@ -306,7 +393,12 @@ def get_users(current_user, public_id):
 
 @app.route('/api/user/<public_id>', methods=['DELETE'])
 @token_required
-def delete_user(current_user, public_id):
+def delete_user(current_user: User, public_id: str) -> str:
+	""" Function to handle the deletion of a user via the /user api endpoint.
+
+	User must be an admin in order to successfully delete a user from the 
+	database. 
+	"""
 	if not current_user.admin:
 		return jsonify({'Error' : 'Not authorized to perform that function.'})
 
@@ -321,27 +413,45 @@ def delete_user(current_user, public_id):
 	return jsonify({'message' : 'The user has been deleted.'})
 
 @app.route('/api/login')
-def login():
+def login() -> str:
+	""" Function to handle the logging in of a user via the /login api endpoint.
+
+	User must pass their username and password as parameters of HTTP Basic Auth
+	in their request to login. If login is successful, function returns the 
+	user's x-access-token.
+	"""
 	auth = request.authorization
 
 	if not auth or not auth.username or not auth.password:
-		return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm-"Login required!"'})
+		return make_response('Could not verify', 401, 
+			{'WWW-Authenticate' : 'Basic realm-"Login required!"'})
 
 	user = db.session.query(User).filter(User.username == auth.username).first()
 
 	if not user:
-		return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm-"Login required!"'})
+		return make_response('Could not verify', 401, 
+			{'WWW-Authenticate' : 'Basic realm-"Login required!"'})
 
 	if check_password_hash(user.password, auth.password):
-		token = jwt.encode({'public_id' : user.public_id}, app.config['SECRET_KEY'], algorithm='HS256')
+		token = jwt.encode({'public_id' : user.public_id}, 
+			app.config['SECRET_KEY'], algorithm='HS256')
+
 		return jsonify({'token' : token})
 
-	return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm-"Login required!"'})
+	return make_response('Could not verify', 401, 
+		{'WWW-Authenticate' : 'Basic realm-"Login required!"'})
 
-# Route to the index page
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
-def home_page():
+def home_page() -> None:
+	""" Function return the home page html template, including loading and
+	handling register and login form submission. 
+
+	If user submits login form successfully, they are provided their 
+	x-access-token via a flash message. If user submits the register form 
+	successfully, a new user with their credentials is created in the database
+	and they are provided their x-access token via a flash message. """
 
 	register_form = RegisterForm()
 	login_form = LoginForm()
@@ -349,11 +459,21 @@ def home_page():
 	if request.method == 'POST':
 		if request.form['form-name'] == 'register-form':
 			if register_form.validate_on_submit():
-				hashed_password = generate_password_hash(register_form.password1.data, method='sha256')
-				new_user = User(public_id=str(uuid.uuid4()), username=register_form.username.data, password=hashed_password, admin=False)
+
+				hashed_password = generate_password_hash(register_form.password1.data, 
+					method='sha256')
+
+				new_user = User(public_id=str(uuid.uuid4()), 
+					username=register_form.username.data, 
+					password=hashed_password, admin=False)
+
 				db.session.add(new_user)
 				db.session.commit()
-				token = jwt.encode({'public_id' : new_user.public_id}, app.config['SECRET_KEY'], algorithm='HS256')
+
+				token = jwt.encode({'public_id' : new_user.public_id}, 
+					app.config['SECRET_KEY'], 
+					algorithm='HS256')
+
 				flash(f'You have been successfully registered! Your access token is:\n{token}.')
 
 			elif register_form.errors != {}:
@@ -362,41 +482,74 @@ def home_page():
 
 		if request.form['form-name'] == 'login-form':
 			if login_form.validate_on_submit():
-				user = db.session.query(User).filter(User.username == login_form.username.data).first()
+				user = db.session.query(User).filter(
+					User.username == login_form.username.data).first()
+
 				if user and check_password_hash(user.password, login_form.password.data):
-					token = jwt.encode({'public_id' : user.public_id}, app.config['SECRET_KEY'], algorithm='HS256')
-					flash(f'You have been successfully logged in! Your access token is:\n{token}.', category='success')
+					token = jwt.encode({'public_id' : user.public_id}, 
+						app.config['SECRET_KEY'], algorithm='HS256')
+
+					flash(f'You have been successfully logged in! Your access token is:\n{token}.', 
+						category='success')
+
 				else:
-					flash('Unable to log in: incorrect username or password.', category='danger')
+					flash('Unable to log in: incorrect username or password.', 
+						category='danger')
 
 			elif login_form.errors != {}:
 				for err_msg in login_form.errors.values():
-					flash(f'There was an error with logging in: {err_msg}', category='danger')
+					flash(f'There was an error with logging in: {err_msg}', 
+						category='danger')
 
-	return render_template('index.html', register_form=register_form, login_form=login_form)
+	return render_template('index.html', 
+		register_form=register_form, login_form=login_form)
+
 
 @app.route('/api/sample/players', methods=['GET'])
-def test_players():
+def test_players() -> str:
+	""" Function to return sample output of /players endpoint. 
+	Returns the first 5 players in the database. """
+
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/players', headers={'x-access-token': token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/players', 
+		headers={'x-access-token': token})
+
 	return jsonify(result.json()[:5])
+
 
 @app.route('/api/sample/stats/Dalvin_Cook/2020/2', methods=['GET'])
-def test_stats():
+def test_stats() -> str:
+	""" Function to return the sample output of /stats endpoint.
+	Returns the stats for Dalvin Cook, week 2, 2020.
+	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/stats/Dalvin_Cook/2020/2', headers={'x-access-token': token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/stats/Dalvin_Cook/2020/2', 
+		headers={'x-access-token': token})
+
 	return jsonify(result.json())
 
+
 @app.route('/api/sample/top/2020/8/te', methods=['GET'])
-def test_top():
+def test_top() -> str:
+	""" Function to return the sample output of /top endpoint.
+	Returns the top 5 tight ends for week 8, 2020.
+	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top/2020/8/te', headers={'x-access-token': token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/top/2020/8/te', 
+		headers={'x-access-token': token})
+
 	return jsonify(result.json()[:5])
 
+
 @app.route('/api/sample/top_performances/2019', methods=['GET'])
-def test_top_performances():
+def test_top_performances() -> str:
+	""" Function to return the sample output of /top_performances endpoint.
+	Returns the top 5 performances from 2019.
+	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top_performances/2019', headers={'x-access-token':token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/top_performances/2019', 
+		headers={'x-access-token':token})
+
 	return jsonify(result.json()[:5])
 
 
