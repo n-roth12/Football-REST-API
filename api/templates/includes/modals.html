@@ -54,10 +54,10 @@
 				<form method="POST">
 					{{ login_form.hidden_tag() }}
 		            {{ login_form.username.label() }}
-		            {{ login_form.username(class="form-control", placeholder="User Name") }}
+		            {{ login_form.username(class="form-control") }}
 
 		            {{ login_form.password.label() }}
-		            {{ login_form.password(class="form-control", placeholder="Password") }}
+		            {{ login_form.password(class="form-control") }}
 		            <br>
 		            <input type="hidden" name="form-name" value="login-form">
 		            {{ login_form.submit(class="btn-outline-success btn-block btn") }}

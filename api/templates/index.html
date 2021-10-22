@@ -11,23 +11,40 @@
 
 	<body>
 		{% with messages = get_flashed_messages(with_categories=true) %}
-			{% if messages %}
-				{% for category, message in messages %}
-					<div class="alert alert-{{ category }}">
-						<button type="button" class="m1-2 mb-1 close" data-dismiss="alert" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
-						{{ message }}
-					</div>
-				{% endfor %}
-			{% endif %}
-		{% endwith %}
-		<header>
+		{% if messages %}
+			{% for category, message in messages %}
+				<div class="alert alert-{{ category }}">
+					<button type="button" class="m1-2 mb-1 close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					{{ message }}
+				</div>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+		<nav class="mb-5 navbar navbar-dark navbar-expand-sm fixed-top">
+			<div class="container">
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarNav">
+					<ul class="navbar-nav ml-auto">
+						<li class="nav-item">
+							<a class="nav-link" href="" data-toggle="modal" data-target="#Modal-Login">Login</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="" data-toggle="modal" data-target="#Modal-Register">Register</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+		<div class="header">
 			<div id="header-inner">
 				<h1 class="text-center"><i class="fas fa-football-ball"></i> Welcome to FFBProject API</h1>
 				<h4 class="text-center">An API for retrieving information about NFL players and performances</h4>
 			</div>
-		</header>
+		</div>
 		{% include 'includes/modals.html' %}
 		<div class="container">
 			<div class="row">
@@ -136,26 +153,6 @@
 						</section>
 					</div>
 				</div>
-<!--
-				<div class="sticky-nav col-md-2">
-					<div class="content">
-						<div>
-							<a href="" data-toggle="modal" data-target="#Modal-Register">Register</a>
-						</div>
-						<hr>
-						<div>
-							<a href="" data-toggle="modal" data-target="#Modal-Login">Login</a>
-						</div>
-						<hr>
-						<div class="nav-links">
-							<a href="#section-1">Getting Started</a>
-							<a href="#section-2">API Endpoints</a>
-							<a href="#section-3">Notes</a>
-						</div>
-					</div>
-
-				</div>-->
-
 			</div>
 		</div>
 
@@ -171,6 +168,7 @@
 		body {
 			background-color: #f7f7f7;
 			font-family: 'Inter', sans-serif;
+			padding-top: 5vh;
 		}
 		h1, h4, i {
 			color: #f7f7f7;
@@ -182,7 +180,7 @@
 		#header-inner {
 			padding: 40px;
 		}
-		header {
+		.header {
 			background-color: #000080;
 			color: white;
 			box-shadow: 0px 0px 1px 1px black;
@@ -204,19 +202,19 @@
 		ul {
 			list-style-type: circle;
 		}
-		.sticky-nav {
-			position: sticky;
-			top: 0;
-
-		}
-		.sticky-nav a {
-			display: block;
-			text-decoration: None;
-			margin-top: 10px;
-		}
 		html {
 			scroll-behavior: smooth;
 		}
+		nav {
+			background-color: #000080;
+		}
+		nav a {
+			color: white !important;
+		}
+		.alert {
+			margin: 0;
+		}
+
 	</style>
 
 	<script>
