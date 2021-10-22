@@ -1,5 +1,7 @@
 from api import app
 from flask import Flask, request, jsonify, render_template, make_response, flash
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from sqlalchemy.sql import func
 from sqlalchemy import desc
 from api import db, ma
@@ -35,6 +37,8 @@ week_schema = WeekSchema()
 weeks_schema = WeekSchema(many=True)
 top_player_schema = TopPlayerSchema()
 
+limiter = Limiter(app, key_func=get_remote_address, default_limits=["100/day;10/hour;1/minute"])
+
 def token_required(f):
 	@wraps(f)
 	def decorated(*args, **kwargs):
@@ -43,7 +47,6 @@ def token_required(f):
 		Decoded token is used to find and return User in database. 
 		"""
 		token = None
-
 		if 'x-access-token' in request.headers:
 			token = request.headers['x-access-token']
 
@@ -53,7 +56,6 @@ def token_required(f):
 		try:
 			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms='HS256')
 			current_user = db.session.query(User).filter(User.public_id == data['public_id']).first()
-
 		except:
 			return jsonify({'Error' : 'Token is invalid.'}), 401
 
@@ -79,7 +81,7 @@ def get_players(current_user, pos: str) -> list[dict]:
 		players = db.session.query(Player).all()
 	else:
 		players = db.session.query(Player).filter(Player.position == pos.upper()).all()
-	print(len(players))
+
 	return jsonify(players_schema.dump(players)), 200
 
 
@@ -104,6 +106,7 @@ def get_week(current_user, name: str, year: int, week: int) -> dict:
 		return jsonify({"Error": "Player not found in database."})
 
 	if year:
+		# Query to get weekly stats for each week of the specified Player and Year
 		year_stats = db.session.query(Year).filter(Year.player_id == player.id, 
 			Year.year_number == year).first()
 
@@ -111,6 +114,7 @@ def get_week(current_user, name: str, year: int, week: int) -> dict:
 			return jsonify({"Error": "No data found for this player for specified year."}), 404
 
 		if week:
+			# Query to get the weekly stats for the specified Week, Player, and Year
 			week_stats = db.session.query(Week, PlayerGameStats).filter(
 				Week.year_id == year_stats.id,
 				Week.week_number == week,
@@ -124,13 +128,15 @@ def get_week(current_user, name: str, year: int, week: int) -> dict:
 		else:
 			weeks = db.session.query(Week).filter(Week.year_id == year_stats.id).all()
 			season_stats = {}
+			# Summing the weekly stats for each week of the specified year for each 
+			# stat category
 			for week in weeks:
 				game_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
 
 				for stat_category in stat_categories:
 					if stat_category in season_stats:
 						season_stats[stat_category] += getattr(game_stats, stat_category)
-
+						
 					else:
 						season_stats[stat_category] = getattr(game_stats, stat_category)
 
@@ -194,6 +200,7 @@ def get_pos_top(current_user: User, year: int, week: int, pos: str) -> list[dict
 	User must provide valid x-access-token to access this endpoint.
 	"""
 	if week:
+		# Query to get the weekly stats of all players for the specified week and year
 		top_players = db.session.query(PlayerGameStats, Player, Week, Year).filter(
 			PlayerGameStats.week_id == Week.id,
 			Week.week_number == week,
@@ -202,6 +209,7 @@ def get_pos_top(current_user: User, year: int, week: int, pos: str) -> list[dict
 			Year.player_id == Player.id)
 
 		if pos:
+			# Query to filter top_players by position and order by fantasy points scored
 			top_players = top_players.filter(Player.position == pos.upper()).order_by(
 				PlayerGameStats.fantasy_points.desc()).all()
 		else:
@@ -219,7 +227,6 @@ def get_pos_top(current_user: User, year: int, week: int, pos: str) -> list[dict
 
 	else:
 		# Query to sum the weekly stats for all players across all years played
-		# right now it actually finds the best performances of the year
 		top_players = db.session.query(Player,
 			func.sum(PlayerGameStats.passing_attempts),
 			func.sum(PlayerGameStats.passing_completions),
@@ -284,6 +291,7 @@ def get_top_performances(current_user: User, year: int) -> list[dict]:
 
 	User must provide valid x-access-token to access this endpoint.
 	"""
+	# Query to get the weekly top_performances ordered by fantasy points scored
 	top_players = db.session.query(Player, PlayerGameStats, Week, Year).filter(
 		PlayerGameStats.week_id == Week.id,
 		Week.year_id == Year.id,
@@ -444,6 +452,7 @@ def login() -> str:
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
+@limiter.exempt
 def home_page() -> None:
 	""" Function return the home page html template, including loading and
 	handling register and login form submission. 
