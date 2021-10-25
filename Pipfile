@@ -19,6 +19,7 @@ gunicorn = "*"
 uuid = "*"
 pg = "*"
 flask-limiter = "*"
+flask-cors = "*"
 
 [dev-packages]
 
