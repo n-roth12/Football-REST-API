@@ -37,7 +37,7 @@ week_schema = WeekSchema()
 weeks_schema = WeekSchema(many=True)
 top_player_schema = TopPlayerSchema()
 
-limiter = Limiter(app, key_func=get_remote_address, default_limits=["100/day;10/hour;1/minute"])
+limiter = Limiter(app, key_func=get_remote_address, default_limits=["1000/day;100/hour;10/minute"])
 
 def token_required(f):
 	@wraps(f)
