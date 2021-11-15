@@ -66,10 +66,10 @@ def token_required(f):
 
 ##### Routes associated with fetching player data #####
 
-@app.route('/api/players', defaults={'pos': None}, methods=['GET'])
-@app.route('/api/players/<pos>', methods=['GET'])
+@app.route('/api/players', defaults={'id': None}, methods=['GET'])
+@app.route('/api/players/<id>', methods=['GET'])
 @token_required
-def get_players(current_user, pos: str) -> list[dict]:
+def get_players(current_user, id: str) -> list[dict]:
 	""" Funciton to return the list of Players via the /players api endpoint.
 
 	Players can be filtered by position. If position is not specified, all players
@@ -77,12 +77,12 @@ def get_players(current_user, pos: str) -> list[dict]:
 
 	User must provide a valid x-access-token to access this endpoint.
 	"""
-	if not pos:
+	if not id:
 		players = db.session.query(Player).all()
-	else:
-		players = db.session.query(Player).filter(Player.position == pos.upper()).all()
-
-	return jsonify(players_schema.dump(players)), 200
+		return jsonify(players_schema.dump(players)), 200
+	
+	player = db.session.query(Player).filter(Player.id == id).first()
+	return jsonify(player_schema.dump(player)), 200
 
 
 @app.route('/api/stats/<name>', defaults={'year': None, 'week': None}, methods=['GET'])
