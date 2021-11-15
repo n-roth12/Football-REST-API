@@ -77,12 +77,16 @@ def get_players(current_user, id: str) -> list[dict]:
 
 	User must provide a valid x-access-token to access this endpoint.
 	"""
-	if not id:
-		players = db.session.query(Player).all()
-		return jsonify(players_schema.dump(players)), 200
+	if id:
+		player = db.session.query(Player).filter(Player.id == id).first()
+		return jsonify(player_schema.dump(player)), 200
 	
-	player = db.session.query(Player).filter(Player.id == id).first()
-	return jsonify(player_schema.dump(player)), 200
+	position = request.args.get('pos').upper()
+	if position:
+		players = db.session.query(Player).filter(Player.position == position).all()
+	else:
+		players = db.session.query(Player).all()
+	return jsonify(players_schema.dump(players)), 200
 
 
 @app.route('/api/stats/<name>', defaults={'year': None, 'week': None}, methods=['GET'])
