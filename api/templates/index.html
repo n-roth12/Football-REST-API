@@ -89,26 +89,38 @@
 							<p>The base URL for all endpoints is <strong>https://ffbrestapi.herokuapp.com/api/v1</strong></p>
 							<hr>
 							<div>
-								<p><strong>/players/&ltpos&gt</strong> : Returns the list of all players in the database.</p>
+								<p><strong>/players</strong> : Path to retrieve players in database.</p>
+								<p><strong>/players/&ltid&gt</strong> : Returns the player with the corresponding ID.</p>
 								<ul>
-									<li>Parameters: Pos</li>
+									<li>Query String Parameters:</li>
 									<ul>
-										<li>Pos (Optional) : The position of players to be returned. Options are QB, RB, WR, TE. If no position is specified, players of all four positions will be returned.</li>
+										<li>pos (Optional) : The position of players to be returned. Options are QB, RB, WR, TE. If no position is specified, players of all four positions will be returned.</li>
+										<li>limit (Optional) : The maximum number of players to be returned. Options are any integer value. If no limit is specified, all players matching the query will be returned.
+										</li>
 									</ul>
-									<li><a href='/api/sample/players'>Sample Response</a></li>
+									<li>Example Calls:</li>
+									<ul>
+										<li><strong>/players?limit=5 : </strong><a href='/api/sample/players1'>Response</a></li>
+										<li><strong>/players?pos=WR&limit=10 : </strong><a href='/api/sample/players2'>Response</a></li>
+									</ul>
 								</ul>
 							</div>
 							<hr>
 							<div>
-								<p><strong>/stats/&ltname&gt/&ltyear&gt/&ltweek&gt</strong> : Returns the game stats of a specific player.</p>
+								<p><strong>/stats</strong> : Path to retrieve the stats of a player from a week or year.</p>
 								<ul>
-									<li>Parameters : Name, Year, Week</li>
+									<li>Query String Parameters</li>
 									<ul>
-										<li>Name (Required) : The name of the player whose stats will be returned. Format as Firstname_Lastname.</li>
-										<li>Year (Optional) : The year from which to return stats. If year is not specified, the career total stats for the specified player will be returned.</li>
-										<li>Week (Optional) : The week of the season from which to return stats. If week is not specified, the season total stats of the specified year will be returned.</li>
+										<li>Name (Required) : The name of the player whose stats will be returned. Format as: firstname_lastname (case insensitive).</li>
+										<li>Year (Optional) : The year from which to return stats. Options are the years 2012 through 2020. If the year is not specified, the career total stats for the specified player will be returned.</li>
+										<li>Week (Optional) : The week of the season from which to return stats. Options are 1 through 17. If week is not specified, the season total stats of the specified year will be returned.</li>
 									</ul>
-									<li><a href="/api/sample/stats">Sample Response</a></li>
+									<li>Example Calls:</li>
+									<ul>
+										<li><strong>/stats?name=calvin_ridley : </strong><a href="/api/sample/stats1">Response</a></li>
+										<li><strong>/stats?name=dalvin_cook&year=2019 : </strong><a href="/api/sample/stats2"> Response</a></li>
+										<li><strong>/stats?name=justin_herbert&year=2020&week=11 : </strong><a href="/api/sample/stats3">Response</a></li>
+									</ul>
 								</ul>
 							</div>
 							<hr>
@@ -169,6 +181,7 @@
 			background-color: #f7f7f7;
 			font-family: 'Inter', sans-serif;
 			padding-top: 5vh;
+			line-height: 1.9em;
 		}
 		h1, h4, i {
 			color: #f7f7f7;

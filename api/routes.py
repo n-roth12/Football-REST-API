@@ -552,29 +552,59 @@ def home_page() -> None:
 		register_form=register_form, login_form=login_form)
 
 
-@app.route('/api/sample/players', methods=['GET'])
-def test_players() -> str:
+@app.route('/api/sample/players1', methods=['GET'])
+def test_players1() -> str:
 	""" Function to return sample output of /players endpoint. 
 	Returns the first 5 players in the database. """
 
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/players', 
-		headers={'x-access-token': token})
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/players?limit=5', 
+		headers={ 'x-access-token': token })
 
-	return jsonify(result.json()[:5])
+	return jsonify(result.json())
+
+@app.route('/api/sample/players2', methods=['GET'])
+def test_players2() -> str:
+
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/players?pos=WR&limit=10',
+		headers={ 'x-access-token': token })
+
+	return jsonify(result.json())
 
 
-@app.route('/api/sample/stats', methods=['GET'])
-def test_stats() -> str:
+@app.route('/api/sample/stats1', methods=['GET'])
+def test_stats1() -> str:
 	""" Function to return the sample output of /stats endpoint.
-	Returns the stats for Dalvin Cook, week 2, 2020.
+		Returns the stats for Calvin Ridley.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/stats?name=Dalvin_Cook&year=2020&week=2', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/stats?name=Calvin_Ridley', 
 		headers={'x-access-token': token})
 
 	return jsonify(result.json())
 
+@app.route('/api/sample/stats2', methods=['GET'])
+def test_stats2() -> str:
+	""" Function to return the sample output of /stats endpoint.
+		Returns the stats for Dalvin Cook, 2020.
+	"""
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/stats?name=Dalvin_Cook&year=2019', 
+		headers={'x-access-token': token})
+
+	return jsonify(result.json())
+
+@app.route('/api/sample/stats3', methods=['GET'])
+def test_stats3() -> str:
+	""" Function to return the sample output of /stats endpoint.
+		Returns the stats for Justin Herbert, 2020, week 11.
+	"""
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/stats?name=Justin_Herbert&year=2020&week=11', 
+		headers={'x-access-token': token})
+
+	return jsonify(result.json())
 
 @app.route('/api/sample/top', methods=['GET'])
 def test_top() -> str:
