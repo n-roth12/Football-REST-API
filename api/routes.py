@@ -74,7 +74,7 @@ def convertName(name):
 @app.route('/api/players', defaults={'id': None}, methods=['GET'])
 @app.route('/api/players/<id>', methods=['GET'])
 @token_required
-def get_players(current_user, id: str) -> list[dict]:
+def get_players(current_user: User, id: str) -> list[dict]:
 	""" Funciton to return the list of Players via the /players api endpoint.
 
 	Passing an id will return the player with the corresponding id.
@@ -88,18 +88,17 @@ def get_players(current_user, id: str) -> list[dict]:
 		player = db.session.query(Player).filter(Player.id == id).first()
 		return jsonify(player_schema.dump(player)), 200
 	
-	position = request.args.get('pos').upper()
+	position = request.args.get('pos')
 	if position:
-		players = db.session.query(Player).filter(Player.position == position).all()
+		players = db.session.query(Player).filter(Player.position == position.upper()).all()
 	else:
 		players = db.session.query(Player).all()
 	return jsonify(players_schema.dump(players)), 200
 
 
-@app.route('/api/stats', defaults={'id': None}, methods=['GET'])
-@app.route('/api/stats/<id>', methods=['GET'])
+@app.route('/api/stats', methods=['GET'])
 @token_required
-def get_week(current_user, id: str) -> dict:
+def get_week(current_user: User) -> dict:
 	""" Function to return the stats of Players via the /stats api endpoint.
 
 	Stats can be filtered by Player name, year, and week. If week is not specified,
@@ -108,10 +107,6 @@ def get_week(current_user, id: str) -> dict:
 
 	User must provide valid x-access-token to access this endpoint.
 	"""
-
-	if id:
-		stat = db.session.query(PlayerGameStats).filter(PlayerGameStats.id == id).first()
-		return jsonify(player_game_stat_schema.dump(stat)), 200
 
 	name = request.args.get('name')
 	year = request.args.get('year')
@@ -207,16 +202,12 @@ def get_week(current_user, id: str) -> dict:
 			return jsonify(player_game_stat_schema.dump(result)), 200
 
 	else:
-		stats = db.session.query(PlayerGameStats).all()
-		return jsonify(player_game_stats_schema.dump(stats)), 200
+		return jsonify({ "Error": "Player name must be specified." })
 
 
-
-@app.route('/api/top/<year>', defaults={'week': None, 'pos': None}, methods=['GET'])
-@app.route('/api/top/<year>/<week>', defaults={'pos': None}, methods=['GET'])
-@app.route('/api/top/<year>/<week>/<pos>', methods=['GET'])
+@app.route('/api/top', methods=['GET'])
 @token_required
-def get_pos_top(current_user: User, year: int, week: int, pos: str) -> list[dict]:
+def get_pos_top(current_user: User) -> list[dict]:
 	""" Function to return the top weekly performances via the /top api endpoint.
 
 	Performances can be filtered by year, week, and position. If week is not specified,
@@ -225,84 +216,101 @@ def get_pos_top(current_user: User, year: int, week: int, pos: str) -> list[dict
 
 	User must provide valid x-access-token to access this endpoint.
 	"""
-	if week:
-		# Query to get the weekly stats of all players for the specified week and year
-		top_players = db.session.query(PlayerGameStats, Player, Week, Year).filter(
-			PlayerGameStats.week_id == Week.id,
-			Week.week_number == week,
-			Week.year_id == Year.id,
-			Year.year_number == year,
-			Year.player_id == Player.id)
 
-		if pos:
-			# Query to filter top_players by position and order by fantasy points scored
-			top_players = top_players.filter(Player.position == pos.upper()).order_by(
-				PlayerGameStats.fantasy_points.desc()).all()
+	year = request.args.get('year')
+	week = request.args.get('week')
+	pos = request.args.get('pos')
+
+	if week and not year:
+		return jsonify({ "Error": "Year must be specified if week is specified." })
+
+	if year:
+		if week:
+			# Query to get the weekly stats of all players for the specified week and year
+			top_players = db.session.query(PlayerGameStats, Player, Week, Year).filter(
+				PlayerGameStats.week_id == Week.id,
+				Week.week_number == week,
+				Week.year_id == Year.id,
+				Year.year_number == year,
+				Year.player_id == Player.id)
+
+			if pos:
+				# Query to filter top_players by position and order by fantasy points scored
+				top_players = top_players.filter(Player.position == pos.upper()).order_by(
+					PlayerGameStats.fantasy_points.desc()).all()
+			else:
+				top_players = top_players.order_by(PlayerGameStats.fantasy_points.desc()).all()
+
+			if top_players:
+				result = []
+				for i in range(len(top_players)):
+					result.append(top_player_schema.dump({"rank": i + 1, 
+						"name": top_players[i][1].name, "stats": top_players[i][0]}))
+				return jsonify(result), 200
+
+			else:
+				return jsonify({"Error": "Year or week requested is invalid."}), 404
+
 		else:
-			top_players = top_players.order_by(PlayerGameStats.fantasy_points.desc()).all()
+			# Query to sum the weekly stats for all players across the specified year
+			top_players = db.session.query(Player,
+				func.sum(PlayerGameStats.passing_attempts),
+				func.sum(PlayerGameStats.passing_completions),
+				func.sum(PlayerGameStats.passing_yards),
+				func.sum(PlayerGameStats.passing_touchdowns),
+				func.sum(PlayerGameStats.passing_interceptions),
+				func.sum(PlayerGameStats.passing_2point_conversions),
+				func.sum(PlayerGameStats.rushing_attempts),
+				func.sum(PlayerGameStats.rushing_yards),
+				func.sum(PlayerGameStats.rushing_touchdowns),
+				func.sum(PlayerGameStats.rushing_2point_conversions),
+				func.sum(PlayerGameStats.receptions),
+				func.sum(PlayerGameStats.recieving_yards),
+				func.sum(PlayerGameStats.recieving_touchdowns),
+				func.sum(PlayerGameStats.recieving_2point_conversions),
+				func.sum(PlayerGameStats.fumbles_lost),
+				func.sum(PlayerGameStats.fantasy_points)).join(Week, Year).filter(
+				PlayerGameStats.week_id == Week.id,
+				Week.year_id == Year.id,
+				Year.year_number == year,
+				Year.player_id == Player.id).group_by(Player.id).order_by(desc(func.sum(PlayerGameStats.fantasy_points)))
 
-		if top_players:
+			if pos:
+				top_players = top_players.filter(Player.position == pos.upper()).all()
+			else:
+				top_players = top_players.all()
+
+			if not len(top_players):
+				return jsonify({"Error": "No data for the year requested."}), 404
+
 			result = []
 			for i in range(len(top_players)):
+				# Feeding the results of the query back into a PlayerGameStats object
+				game_stats = PlayerGameStats(None,
+					top_players[i][1],
+					top_players[i][2],
+					top_players[i][3],
+					top_players[i][4],
+					top_players[i][5],
+					top_players[i][6],
+					top_players[i][7],
+					top_players[i][8],
+					top_players[i][9],
+					top_players[i][10],
+					top_players[i][11],
+					top_players[i][12],
+					top_players[i][13],
+					top_players[i][14],
+					top_players[i][15],
+					top_players[i][16])
+
 				result.append(top_player_schema.dump({"rank": i + 1, 
-					"name": top_players[i][1].name, "stats": top_players[i][0]}))
+					"name": top_players[i][0].name, "stats": game_stats}))
+
 			return jsonify(result), 200
-
-		else:
-			return jsonify({"Error": "Year or week requested is invalid."}), 404
-
 	else:
-		# Query to sum the weekly stats for all players across all years played
-		top_players = db.session.query(Player,
-			func.sum(PlayerGameStats.passing_attempts),
-			func.sum(PlayerGameStats.passing_completions),
-			func.sum(PlayerGameStats.passing_yards),
-			func.sum(PlayerGameStats.passing_touchdowns),
-			func.sum(PlayerGameStats.passing_interceptions),
-			func.sum(PlayerGameStats.passing_2point_conversions),
-			func.sum(PlayerGameStats.rushing_attempts),
-			func.sum(PlayerGameStats.rushing_yards),
-			func.sum(PlayerGameStats.rushing_touchdowns),
-			func.sum(PlayerGameStats.rushing_2point_conversions),
-			func.sum(PlayerGameStats.receptions),
-			func.sum(PlayerGameStats.recieving_yards),
-			func.sum(PlayerGameStats.recieving_touchdowns),
-			func.sum(PlayerGameStats.recieving_2point_conversions),
-			func.sum(PlayerGameStats.fumbles_lost),
-			func.sum(PlayerGameStats.fantasy_points)).join(Week, Year).filter(
-			PlayerGameStats.week_id == Week.id,
-			Week.year_id == Year.id,
-			Year.year_number == year,
-			Year.player_id == Player.id).group_by(Player.id).order_by(desc(func.sum(PlayerGameStats.fantasy_points))).all()
+		return jsonify({ "Error": "Year must be specified." })
 
-		if not len(top_players):
-			return jsonify({"Error": "No data for the year requested."}), 404
-
-		result = []
-		for i in range(len(top_players)):
-			# Feeding the results of the query back into a PlayerGameStats object
-			game_stats = PlayerGameStats(None,
-				top_players[i][1],
-				top_players[i][2],
-				top_players[i][3],
-				top_players[i][4],
-				top_players[i][5],
-				top_players[i][6],
-				top_players[i][7],
-				top_players[i][8],
-				top_players[i][9],
-				top_players[i][10],
-				top_players[i][11],
-				top_players[i][12],
-				top_players[i][13],
-				top_players[i][14],
-				top_players[i][15],
-				top_players[i][16])
-
-			result.append(top_player_schema.dump({"rank": i + 1, 
-				"name": top_players[i][0].name, "stats": game_stats}))
-
-		return jsonify(result), 200
 
 
 @app.route('/api/top_performances/<year>', methods=['GET'])
@@ -552,25 +560,25 @@ def test_players() -> str:
 	return jsonify(result.json()[:5])
 
 
-@app.route('/api/sample/stats/Dalvin_Cook/2020/2', methods=['GET'])
+@app.route('/api/sample/stats', methods=['GET'])
 def test_stats() -> str:
 	""" Function to return the sample output of /stats endpoint.
 	Returns the stats for Dalvin Cook, week 2, 2020.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/stats/Dalvin_Cook/2020/2', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/stats?name=Dalvin_Cook&year=2020&week=2', 
 		headers={'x-access-token': token})
 
 	return jsonify(result.json())
 
 
-@app.route('/api/sample/top/2020/8/te', methods=['GET'])
+@app.route('/api/sample/top', methods=['GET'])
 def test_top() -> str:
 	""" Function to return the sample output of /top endpoint.
 	Returns the top 5 tight ends for week 8, 2020.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top/2020/8/te', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/top?year=2019&week=12&pos=RB', 
 		headers={'x-access-token': token})
 
 	return jsonify(result.json()[:5])
