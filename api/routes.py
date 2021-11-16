@@ -87,13 +87,17 @@ def get_players(current_user: User, id: str) -> list[dict]:
 	if id:
 		player = db.session.query(Player).filter(Player.id == id).first()
 		return jsonify(player_schema.dump(player)), 200
-	
+
+	players = db.session.query(Player)
 	position = request.args.get('pos')
+	limit = request.args.get('limit')
+
 	if position:
-		players = db.session.query(Player).filter(Player.position == position.upper()).all()
-	else:
-		players = db.session.query(Player).all()
-	return jsonify(players_schema.dump(players)), 200
+		players = players.filter(Player.position == position.upper())
+	if limit:
+		players = players.limit(int(limit))
+
+	return jsonify(players_schema.dump(players.all())), 200
 
 
 @app.route('/api/v1/stats', methods=['GET'])
