@@ -71,8 +71,8 @@ def convertName(name):
 
 ##### Routes associated with fetching player data #####
 
-@app.route('/api/players', defaults={'id': None}, methods=['GET'])
-@app.route('/api/players/<id>', methods=['GET'])
+@app.route('/api/v1/players', defaults={'id': None}, methods=['GET'])
+@app.route('/api/v1/players/<id>', methods=['GET'])
 @token_required
 def get_players(current_user: User, id: str) -> list[dict]:
 	""" Funciton to return the list of Players via the /players api endpoint.
@@ -96,7 +96,7 @@ def get_players(current_user: User, id: str) -> list[dict]:
 	return jsonify(players_schema.dump(players)), 200
 
 
-@app.route('/api/stats', methods=['GET'])
+@app.route('/api/v1/stats', methods=['GET'])
 @token_required
 def get_week(current_user: User) -> dict:
 	""" Function to return the stats of Players via the /stats api endpoint.
@@ -205,7 +205,7 @@ def get_week(current_user: User) -> dict:
 		return jsonify({ "Error": "Player name must be specified." })
 
 
-@app.route('/api/top', methods=['GET'])
+@app.route('/api/v1/top', methods=['GET'])
 @token_required
 def get_pos_top(current_user: User) -> list[dict]:
 	""" Function to return the top weekly performances via the /top api endpoint.
@@ -313,7 +313,7 @@ def get_pos_top(current_user: User) -> list[dict]:
 
 
 
-@app.route('/api/top_performances/<year>', methods=['GET'])
+@app.route('/api/v1/top_performances/<year>', methods=['GET'])
 @token_required
 def get_top_performances(current_user: User, year: int) -> list[dict]:
 	""" Function to return the top perfomances for a given year via the 
@@ -554,7 +554,7 @@ def test_players() -> str:
 	Returns the first 5 players in the database. """
 
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/players', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/players', 
 		headers={'x-access-token': token})
 
 	return jsonify(result.json()[:5])
@@ -566,7 +566,7 @@ def test_stats() -> str:
 	Returns the stats for Dalvin Cook, week 2, 2020.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/stats?name=Dalvin_Cook&year=2020&week=2', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/stats?name=Dalvin_Cook&year=2020&week=2', 
 		headers={'x-access-token': token})
 
 	return jsonify(result.json())
@@ -578,7 +578,7 @@ def test_top() -> str:
 	Returns the top 5 tight ends for week 8, 2020.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top?year=2019&week=12&pos=RB', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top?year=2019&week=12&pos=RB', 
 		headers={'x-access-token': token})
 
 	return jsonify(result.json()[:5])
@@ -590,7 +590,7 @@ def test_top_performances() -> str:
 	Returns the top 5 performances from 2019.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top_performances/2019', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top_performances/2019', 
 		headers={'x-access-token':token})
 
 	return jsonify(result.json()[:5])
