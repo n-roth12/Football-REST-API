@@ -130,8 +130,8 @@
 									<ul>
 										<li>Year (Required) : The year from which to return stats. Options are the years 2021 through 2020.</li>
 										<li>Week (Optional) : The week from which to return stats. Options are 1 through 17. If the week is not specified, the top players of the year specified will be returned, along with their cumulative stats for the year.</li>
-										<li>Pos (Optional) : The position to filter players by. The options are QB, RB, WR, and TE. If the position is not specified, the stats from all players will be returned.</li>
-										<li>Limit (Optional) : The maximum number of players to be returned. Options are any integer value. If not limit is specified, all players matching the query will be returned</li>
+										<li>Pos (Optional) : The position to filter players by. The options are QB, RB, WR, and TE. If the position is not specified, the stats from all positions will be returned.</li>
+										<li>Limit (Optional) : The maximum number of players to be returned. Options are any integer value. If no limit is specified, all players matching the query will be returned</li>
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
@@ -143,13 +143,19 @@
 							</div>
 							<hr>
 							<div>
-								<p><strong>/top_performances/&ltyear&gt</strong> : Returns the top weekly performances by fantasy points for the specified season.</p>
+								<p><strong>/performances</strong> : Path to retrieve the top single-game fantasy performances.</p>
 								<ul>
-									<li>Parameters : Year</li>
+									<li>Query String Parameters</li>
 									<ul>
-										<li>Year (Required) : The year from which to return stats.</li>
+										<li>Year (Optional) : The year from which to return stats. Options are any integer value. If no year is specified, the top performances from 2012 to 2020 will be returned.</li>
+										<li>Pos (Optional) : The position to filter players by. Options are QB, RB, WR, and TE. If the position is not specified, the stats from all positions wille be returned.</li>
+										<li>Limit (Optional) : The maximum number of performances to be returned. If no limit is speicified, the performances of all players matching the query will be returned.</li>
 									</ul>
-									<li><a href="/api/sample/top_performances/2019">Sample Response</a></li>
+									<li>Example Calls:</li>
+									<ul>
+										<li><strong>/performances?pos=RB&limit=5 : </strong><a href="/api/sample/performances1">Response</a></li>
+										<li><strong>/performances?year=2017&limit=5 : </strong><a href="/api/sample/performances2">Response</a></li>
+									</ul>
 								</ul>
 							</div>
 						</section>

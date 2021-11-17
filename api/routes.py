@@ -17,7 +17,7 @@ from functools import wraps
 import requests
 
 # These are the stat categories used in the PlayerGameStats model 
-stat_categories = ['passing_attempts', 'passing_completions',
+STAT_CATEGORIES = ['passing_attempts', 'passing_completions',
 			'passing_yards', 'passing_touchdowns',
 			'passing_interceptions', 'passing_2point_conversions',
 			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 
@@ -25,7 +25,7 @@ stat_categories = ['passing_attempts', 'passing_completions',
 			'recieving_touchdowns', 'recieving_2point_conversions', 'fumbles_lost', 'fantasy_points']
 
 # These are the four positions of Players in the database
-positions = ['QB', 'RB', 'WR','TE']
+POSITIONS = ['QB', 'RB', 'WR','TE']
 
 player_game_stat_schema = PlayerGameStatsSchema()
 player_game_stats_schema = PlayerGameStatsSchema(many=True)
@@ -88,12 +88,16 @@ def get_players(current_user: User, id: str) -> list[dict]:
 		player = db.session.query(Player).filter(Player.id == id).first()
 		return jsonify(player_schema.dump(player)), 200
 
-	players = db.session.query(Player)
-	position = request.args.get('pos')
+	pos = request.args.get('pos')
 	limit = request.args.get('limit')
+	players = db.session.query(Player)
 
-	if position:
-		players = players.filter(Player.position == position.upper())
+	if pos:
+		if pos.upper() not in POSITIONS:
+			return jsonify({ "Error": "Specified position is invalid." })
+
+		players = players.filter(Player.position == pos.upper())
+
 	if limit:
 		players = players.limit(int(limit))
 
@@ -152,7 +156,7 @@ def get_week(current_user: User) -> dict:
 				for week in weeks:
 					game_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
 
-					for stat_category in stat_categories:
+					for stat_category in STAT_CATEGORIES:
 						if stat_category in season_stats:
 							season_stats[stat_category] += getattr(game_stats, stat_category)
 							
@@ -240,6 +244,9 @@ def get_pos_top(current_user: User) -> list[dict]:
 				Year.player_id == Player.id)
 
 			if pos:
+				if pos.upper() not in POSITIONS:
+					return jsonify({ "Error": "Specified position is invalid." })
+
 				# Query to filter top_players by position and order by fantasy points scored
 				top_players = top_players.filter(Player.position == pos.upper()).order_by(
 					PlayerGameStats.fantasy_points.desc()).limit(
@@ -322,9 +329,9 @@ def get_pos_top(current_user: User) -> list[dict]:
 
 
 
-@app.route('/api/v1/top_performances/<year>', methods=['GET'])
+@app.route('/api/v1/performances', methods=['GET'])
 @token_required
-def get_top_performances(current_user: User, year: int) -> list[dict]:
+def get_top_performances(current_user: User) -> list[dict]:
 	""" Function to return the top perfomances for a given year via the 
 	/top_performances api endpoint.
 
@@ -334,12 +341,30 @@ def get_top_performances(current_user: User, year: int) -> list[dict]:
 
 	User must provide valid x-access-token to access this endpoint.
 	"""
-	# Query to get the weekly top_performances ordered by fantasy points scored
-	top_players = db.session.query(Player, PlayerGameStats, Week, Year).filter(
-		PlayerGameStats.week_id == Week.id,
-		Week.year_id == Year.id,
-		Year.year_number == year,
-		Year.player_id == Player.id).order_by(desc(PlayerGameStats.fantasy_points)).all()
+	year = request.args.get('year')
+	limit = request.args.get('limit')
+	pos = request.args.get('pos')
+
+	if year:
+		# Query to get the weekly top_performances ordered by fantasy points scored
+		top_players = db.session.query(Player, PlayerGameStats, Week, Year).filter(
+			PlayerGameStats.week_id == Week.id,
+			Week.year_id == Year.id,
+			Year.year_number == int(year),
+			Year.player_id == Player.id)
+	else:
+		top_players = db.session.query(Player, PlayerGameStats, Week, Year).filter(
+			PlayerGameStats.week_id == Week.id,
+			Week.year_id == Year.id,
+			Year.player_id == Player.id)
+	if pos:
+		if pos.upper() not in POSITIONS:
+			return jsonify({ "Error": "Specified position is invalid." })
+
+		top_players = top_players.filter(Player.position == pos.upper())
+
+	top_players = top_players.order_by(desc(PlayerGameStats.fantasy_points)).limit(
+		int(limit) if limit else None).all()
 
 	if len(top_players):
 		result = []
@@ -350,6 +375,8 @@ def get_top_performances(current_user: User, year: int) -> list[dict]:
 
 	else:
 		return jsonify({"Error": "No data for the year requested."}), 404
+
+
 
 
 @app.route('/api/user', methods=['POST'])
@@ -559,7 +586,7 @@ def home_page() -> None:
 
 @app.route('/api/sample/players1', methods=['GET'])
 def test_players1() -> str:
-	""" Function to return sample output of /players endpoint. 
+	""" Function to return a sample output of /players endpoint. 
 		Returns the first 5 players in the database. 
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
@@ -568,9 +595,10 @@ def test_players1() -> str:
 
 	return jsonify(result.json())
 
+
 @app.route('/api/sample/players2', methods=['GET'])
 def test_players2() -> str:
-	""" Function to return sample output of /players endpoint. 
+	""" Function to return a sample output of /players endpoint. 
 		Returns the first 10 WRs in the database. 
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
@@ -582,7 +610,7 @@ def test_players2() -> str:
 
 @app.route('/api/sample/stats1', methods=['GET'])
 def test_stats1() -> str:
-	""" Function to return the sample output of /stats endpoint.
+	""" Function to return a sample output of /stats endpoint.
 		Returns the stats for Calvin Ridley.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
@@ -591,9 +619,10 @@ def test_stats1() -> str:
 
 	return jsonify(result.json())
 
+
 @app.route('/api/sample/stats2', methods=['GET'])
 def test_stats2() -> str:
-	""" Function to return the sample output of /stats endpoint.
+	""" Function to return a sample output of /stats endpoint.
 		Returns the stats for Dalvin Cook, 2020.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
@@ -602,9 +631,10 @@ def test_stats2() -> str:
 
 	return jsonify(result.json())
 
+
 @app.route('/api/sample/stats3', methods=['GET'])
 def test_stats3() -> str:
-	""" Function to return the sample output of /stats endpoint.
+	""" Function to return a sample output of /stats endpoint.
 		Returns the stats for Justin Herbert, 2020, week 11.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
@@ -613,29 +643,65 @@ def test_stats3() -> str:
 
 	return jsonify(result.json())
 
-@app.route('/api/sample/top', methods=['GET'])
-def test_top() -> str:
-	""" Function to return the sample output of /top endpoint.
-		Returns the top 5 tight ends for week 8, 2020.
+
+@app.route('/api/sample/top1', methods=['GET'])
+def test_top1() -> str:
+	""" Function to return a sample output of /top endpoint.
+		Returns the top 5 players for 2017.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top?year=2019&week=12&pos=RB', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top?year=2017&limit=5', 
 		headers={'x-access-token': token})
 
-	return jsonify(result.json()[:5])
+	return jsonify(result.json())
 
 
-@app.route('/api/sample/top_performances/2019', methods=['GET'])
-def test_top_performances() -> str:
-	""" Function to return the sample output of /top_performances endpoint.
-		Returns the top 5 performances from 2019.
+@app.route('/api/sample/top2', methods=['GET'])
+def test_top2() -> str:
+	""" Function to return a sample output of /top endpoint.
+		Returns the top 6 players of 2015, week 7.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top_performances/2019', 
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top?year=2015&week=7&limit=6', 
+		headers={'x-access-token': token})
+
+	return jsonify(result.json())
+
+
+@app.route('/api/sample/top3', methods=['GET'])
+def test_top3() -> str:
+	""" Function to return a sample output of /top endpoint.
+		Returns the top 5 tight ends of 2020.
+	"""
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top?year=2020&pos=TE&limit=5', 
+		headers={'x-access-token': token})
+
+	return jsonify(result.json())
+
+
+@app.route('/api/sample/performances1', methods=['GET'])
+def test_performances1() -> str:
+	""" Function to return the sample output of /performances endpoint.
+		Returns the top 5 RB performances since 2012.
+	"""
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/performances?pos=RB&limit=5', 
 		headers={'x-access-token':token})
 
-	return jsonify(result.json()[:5])
+	return jsonify(result.json())
 
+
+@app.route('/api/sample/performances2', methods=['GET'])
+def test_performances2() -> str:
+	""" Function to return the sample output of /performances endpoint.
+		Returns the top 5 performances of 2017.
+	"""
+	token = app.config['TEST_ACCESS_TOKEN']
+	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/performances?year=2017&limit=5', 
+		headers={'x-access-token':token})
+
+	return jsonify(result.json())
 
 
 
