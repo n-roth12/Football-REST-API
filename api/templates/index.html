@@ -94,9 +94,8 @@
 								<ul>
 									<li>Query String Parameters:</li>
 									<ul>
-										<li>pos (Optional) : The position of players to be returned. Options are QB, RB, WR, TE. If no position is specified, players of all four positions will be returned.</li>
-										<li>limit (Optional) : The maximum number of players to be returned. Options are any integer value. If no limit is specified, all players matching the query will be returned.
-										</li>
+										<li>Pos (Optional) : The position of players to be returned. Options are QB, RB, WR, TE. If no position is specified, players of all four positions will be returned.</li>
+										<li>Limit (Optional) : The maximum number of players to be returned. Options are any integer value. If no limit is specified, all players matching the query will be returned.</li>
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
@@ -125,15 +124,21 @@
 							</div>
 							<hr>
 							<div>
-								<p><strong>/top/&ltyear&gt/&ltweek&gt/&ltpos&gt</strong> : Returns the stats of players ordered by fantasy points finish.</p>
+								<p><strong>/top</strong> : Path to retrieve the stats of the top fantasy football players. Results are sorted by fantasy points scored (4pt QB, PPR scoring).</p>
 								<ul>
-									<li>Parameters : Year, Week, Pos</li>
+									<li>Query String Parameters</li>
 									<ul>
-										<li>Year (Required) : The year from which to return stats.</li>
-										<li>Week (Optional) : The week from which to return stats. If the week is not specified, the season totals for the specified player will be returned.</li>
+										<li>Year (Required) : The year from which to return stats. Options are the years 2021 through 2020.</li>
+										<li>Week (Optional) : The week from which to return stats. Options are 1 through 17. If the week is not specified, the top players of the year specified will be returned, along with their cumulative stats for the year.</li>
 										<li>Pos (Optional) : The position to filter players by. The options are QB, RB, WR, and TE. If the position is not specified, the stats from all players will be returned.</li>
+										<li>Limit (Optional) : The maximum number of players to be returned. Options are any integer value. If not limit is specified, all players matching the query will be returned</li>
 									</ul>
-									<li><a href="/api/sample/top">Sample Response</a></li>
+									<li>Example Calls:</li>
+									<ul>
+										<li><strong>/top?year=2017&limit=5 : </strong><a href="/api/sample/top1">Response</a></li>
+										<li><strong>/top?year=2015&week=7&limit=6 : </strong><a href="/api/sample/top2">Response</a></li>
+										<li><strong>/top?year=2020&pos=TE&limit=5 : </strong><a href="/api/sample/top3">Response</a></li>
+									</ul>
 								</ul>
 							</div>
 							<hr>

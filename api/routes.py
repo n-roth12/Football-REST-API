@@ -77,12 +77,12 @@ def convertName(name):
 def get_players(current_user: User, id: str) -> list[dict]:
 	""" Funciton to return the list of Players via the /players api endpoint.
 
-	Passing an id will return the player with the corresponding id.
+		Passing an id will return the player with the corresponding id.
 
-	Players can be filtered by position. If position is not specified, all players
-	in the database will be returned. Only Player name, id, position are returned.
+		Players can be filtered by position. If position is not specified, all players
+		in the database will be returned.
 
-	User must provide a valid x-access-token to access this endpoint.
+		User must provide a valid x-access-token to access this endpoint.
 	"""
 	if id:
 		player = db.session.query(Player).filter(Player.id == id).first()
@@ -214,16 +214,17 @@ def get_week(current_user: User) -> dict:
 def get_pos_top(current_user: User) -> list[dict]:
 	""" Function to return the top weekly performances via the /top api endpoint.
 
-	Performances can be filtered by year, week, and position. If week is not specified,
-	the yearly stats of Players will be returned. Results are ordered by fantasy points
-	scored. 
+		Performances can be filtered by year, week, and position. If week is not specified,
+		the yearly stats of Players will be returned. Results are ordered by fantasy points
+		scored. 
 
-	User must provide valid x-access-token to access this endpoint.
+		User must provide valid x-access-token to access this endpoint.
 	"""
 
 	year = request.args.get('year')
 	week = request.args.get('week')
 	pos = request.args.get('pos')
+	limit = request.args.get('limit')
 
 	if week and not year:
 		return jsonify({ "Error": "Year must be specified if week is specified." })
@@ -241,9 +242,11 @@ def get_pos_top(current_user: User) -> list[dict]:
 			if pos:
 				# Query to filter top_players by position and order by fantasy points scored
 				top_players = top_players.filter(Player.position == pos.upper()).order_by(
-					PlayerGameStats.fantasy_points.desc()).all()
+					PlayerGameStats.fantasy_points.desc()).limit(
+					int(limit) if limit else None).all()
 			else:
-				top_players = top_players.order_by(PlayerGameStats.fantasy_points.desc()).all()
+				top_players = top_players.order_by(PlayerGameStats.fantasy_points.desc()).limit(
+					int(limit) if limit else None).all()
 
 			if top_players:
 				result = []
@@ -280,9 +283,11 @@ def get_pos_top(current_user: User) -> list[dict]:
 				Year.player_id == Player.id).group_by(Player.id).order_by(desc(func.sum(PlayerGameStats.fantasy_points)))
 
 			if pos:
-				top_players = top_players.filter(Player.position == pos.upper()).all()
+				top_players = top_players.filter(Player.position == pos.upper()).limit(
+					int(limit) if limit else None).all()
 			else:
-				top_players = top_players.all()
+				top_players = top_players.limit(
+					int(limit) if limit else None).all()
 
 			if not len(top_players):
 				return jsonify({"Error": "No data for the year requested."}), 404
@@ -555,8 +560,8 @@ def home_page() -> None:
 @app.route('/api/sample/players1', methods=['GET'])
 def test_players1() -> str:
 	""" Function to return sample output of /players endpoint. 
-	Returns the first 5 players in the database. """
-
+		Returns the first 5 players in the database. 
+	"""
 	token = app.config['TEST_ACCESS_TOKEN']
 	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/players?limit=5', 
 		headers={ 'x-access-token': token })
@@ -565,7 +570,9 @@ def test_players1() -> str:
 
 @app.route('/api/sample/players2', methods=['GET'])
 def test_players2() -> str:
-
+	""" Function to return sample output of /players endpoint. 
+		Returns the first 10 WRs in the database. 
+	"""
 	token = app.config['TEST_ACCESS_TOKEN']
 	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/players?pos=WR&limit=10',
 		headers={ 'x-access-token': token })
@@ -609,7 +616,7 @@ def test_stats3() -> str:
 @app.route('/api/sample/top', methods=['GET'])
 def test_top() -> str:
 	""" Function to return the sample output of /top endpoint.
-	Returns the top 5 tight ends for week 8, 2020.
+		Returns the top 5 tight ends for week 8, 2020.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
 	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top?year=2019&week=12&pos=RB', 
@@ -621,7 +628,7 @@ def test_top() -> str:
 @app.route('/api/sample/top_performances/2019', methods=['GET'])
 def test_top_performances() -> str:
 	""" Function to return the sample output of /top_performances endpoint.
-	Returns the top 5 performances from 2019.
+		Returns the top 5 performances from 2019.
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
 	result = requests.get(f'{app.config["BASE_URL"]}/api/v1/top_performances/2019', 
