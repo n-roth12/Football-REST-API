@@ -7,9 +7,17 @@ class User(db.Model):
 	password = db.Column(db.String(256))
 	admin = db.Column(db.Boolean)
 
+class UserSchema(ma.SQLAlchemySchema):
+	class Meta:
+		model = User
+
+	public_id = ma.auto_field()
+	username = ma.auto_field()
+	admin = ma.auto_field()
+
 # This class stores the data about the last time the database was updated
 class MetaData(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
+	id = db.Column(db.Integer, primary_key=True) 
 	week_of_update = db.Column(db.Integer())
 	year_of_update = db.Column(db.Integer())
 

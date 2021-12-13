@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from api import db, ma
 import json
 from api.models import PlayerGameStats, Week, Year, Player, User
-from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, TopPlayerSchema
+from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, TopPlayerSchema, UserSchema
 from api.forms import LoginForm, RegisterForm
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -37,7 +37,8 @@ week_schema = WeekSchema()
 weeks_schema = WeekSchema(many=True)
 top_player_schema = TopPlayerSchema()
 
-limiter = Limiter(app, key_func=get_remote_address, default_limits=["1000/day;100/hour;10/minute"])
+
+limiter = Limiter(app, key_func=get_remote_address, default_limits=["100000000/day;100000000/hour;100000/minute"])
 
 def token_required(f):
 	@wraps(f)
@@ -86,6 +87,9 @@ def get_players(current_user: User, id: str) -> list[dict]:
 	"""
 	if id:
 		player = db.session.query(Player).filter(Player.id == id).first()
+		if not player:
+			return jsonify({ 'Error': 'No player with specified id.' })
+			
 		return jsonify(player_schema.dump(player)), 200
 
 	pos = request.args.get('pos')
@@ -429,8 +433,8 @@ def promote_user(current_user: User, public_id: str) -> str:
 	return jsonify({'Message' : 'User promoted to admin successfully.'})
 
 
-@app.route('/api/user', defaults={'public_id': None}, methods=['GET'])
-@app.route('/api/user/<public_id>', methods=['GET'])
+@app.route('/api/users', defaults={'public_id': None}, methods=['GET'])
+@app.route('/api/users/<public_id>', methods=['GET'])
 @token_required
 def get_users(current_user: User, public_id: str) -> str:
 	""" Function to handle fetching the Users from the database via the /user
@@ -448,25 +452,14 @@ def get_users(current_user: User, public_id: str) -> str:
 		if not user:
 			return jsonify({'message' : 'No user found.'})
 
-		user_data = {}
-		user_data['public_id'] = user.public_id
-		user_data['name'] = user.username
-		user_data['password'] = user.password
-		user_data['admin'] = user.admin
-
-		return jsonify({'user' : user_data})
+		schema = UserSchema()
+		return jsonify({'user' : schema.dump(
+			user_data['public_id'], user_data['name'], user_data['admin']) })
 
 	users = db.session.query(User).all()
-	result = []
-	for user in users:
-		user_data = {}
-		user_data['public_id'] = user.public_id
-		user_data['name'] = user.username
-		user_data['password'] = user.password
-		user_data['admin'] = user.admin
-		result.append(user_data)
+	schema = UserSchema(many=True)
 
-	return jsonify({'users' : result})
+	return jsonify({ 'users': schema.dump(users) })
 
 
 @app.route('/api/user/<public_id>', methods=['DELETE'])
