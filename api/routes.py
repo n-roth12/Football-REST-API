@@ -6,8 +6,8 @@ from sqlalchemy.sql import func
 from sqlalchemy import desc
 from api import db, ma
 import json
-from api.models import PlayerGameStats, Week, Year, Player, User
-from api.models import PlayerGameStatsSchema, WeekSchema, YearSchema, PlayerSchema, TopPlayerSchema, UserSchema
+from api.models import PlayerGameStats, Player, User
+from api.models import PlayerGameStatsSchema, PlayerSchema, TopPlayerSchema, UserSchema
 from api.forms import LoginForm, RegisterForm
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -27,18 +27,9 @@ STAT_CATEGORIES = ['passing_attempts', 'passing_completions',
 # These are the four positions of Players in the database
 POSITIONS = ['QB', 'RB', 'WR','TE']
 
-player_game_stat_schema = PlayerGameStatsSchema()
-player_game_stats_schema = PlayerGameStatsSchema(many=True)
-player_schema = PlayerSchema()
-players_schema = PlayerSchema(many=True)
-year_schema = YearSchema()
-years_schema = YearSchema(many=True)
-week_schema = WeekSchema()
-weeks_schema = WeekSchema(many=True)
-top_player_schema = TopPlayerSchema()
 
-
-limiter = Limiter(app, key_func=get_remote_address, default_limits=["100000000/day;100000000/hour;100000/minute"])
+limiter = Limiter(app, key_func=get_remote_address, 
+	default_limits=["100000000/day;100000000/hour;100000/minute"])
 
 def token_required(f):
 	@wraps(f)
@@ -72,6 +63,23 @@ def convertName(name):
 
 ##### Routes associated with fetching player data #####
 
+@app.route('/api/v1/playergamestats/<id>', methods=['GET'])
+@token_required
+def get_playergamestats(current_user, id):
+
+	playergamestat = db.session.query(PlayerGameStats).filter(PlayerGameStats.id == id).first()
+
+	if playergamestat:
+		# player = db.session.query(Player).filter(Player.id == playergamestat.player_id).first()
+		# result = {}
+		# result['name'] = player.name
+		# result['stats'] = PlayerGameStats().dump(playergamestat)
+		# return jsonify(result), 200
+		return jsonify(PlayerGameStatsSchema().dump(playergamestat))
+
+	return jsonify({ 'Error': 'No PlayerGameStat with the specified id!' })
+
+
 @app.route('/api/v1/players', defaults={'id': None}, methods=['GET'])
 @app.route('/api/v1/players/<id>', methods=['GET'])
 @token_required
@@ -90,11 +98,14 @@ def get_players(current_user: User, id: str) -> list[dict]:
 		if not player:
 			return jsonify({ 'Error': 'No player with specified id.' })
 			
-		return jsonify(player_schema.dump(player)), 200
+		return jsonify(PlayerSchema().dump(player)), 200
 
 	pos = request.args.get('pos')
 	limit = request.args.get('limit')
 	players = db.session.query(Player)
+
+	if name:
+		player = db.session.add()
 
 	if pos:
 		if pos.upper() not in POSITIONS:
@@ -119,103 +130,71 @@ def get_week(current_user: User) -> dict:
 
 	User must provide valid x-access-token to access this endpoint.
 	"""
-
 	name = request.args.get('name')
 	year = request.args.get('year')
 	week = request.args.get('week')
 
+	if not name:
+		return jsonify({ 'Error': 'Player name must be specified.' })
+
 	if week and not year:
 		return jsonify({ "Error": "Year must be specified if week is specified." })
 
-	if name:
-		name = convertName(name)
-		player = db.session.query(Player).filter(Player.name == name).first()
-		if not player:
-			return jsonify({ "Error": "Player not found in database." })
+	name = convertName(name)
+	player = db.session.query(Player).filter(Player.name == name).first()
+	if not player:
+		return jsonify({ "Error": "Player not found in database." })
 
-		if year:
-			year_stats = db.session.query(Year).filter(
-				Year.player_id == player.id, 
-				Year.year_number == year).first()
+	if year:
+		if week:
+			week_stats = db.session.query(PlayerGameStats) \
+				.filter(PlayerGameStats.week == week,
+					PlayerGameStats.year == year,
+					PlayerGameStats.player_id == player.id).first()
 
-			if not year_stats:
-				return jsonify({ "Error": "No data found for this player for specified year." }), 404
+			if not week_stats:
+				return ({ "Error": "No data found for this player for the specified week." }), 404
 
-			if week:
-				week_stats = db.session.query(Week, PlayerGameStats).filter(
-					Week.year_id == year_stats.id,
-					Week.week_number == week,
-					PlayerGameStats.week_id == Week.id).first()
+			result = {}
+			result['name'] = player.name
+			result['stats'] = PlayerGameStatsSchema().dump(week_stats)
+			return jsonify(result)
 
-				if not week_stats:
-					return ({ "Error": "No data found for this player for the specified week." }), 404
+		year_stats = db.session.query(PlayerGameStats) \
+			.filter(PlayerGameStats.player_id == player.id, 
+				PlayerGameStats.year == year).all()
 
-				return jsonify(player_game_stat_schema.dump(week_stats[1])), 200
+		if not year_stats:
+			return jsonify({ "Error": "No data found for this player for specified year." }), 404
 
-			else:
-				weeks = db.session.query(Week).filter(Week.year_id == year_stats.id).all()
-				season_stats = {}
-				# Summing the weekly stats for each week of the specified year for each 
-				# stat category
-				for week in weeks:
-					game_stats = db.session.query(PlayerGameStats).filter(PlayerGameStats.week_id == week.id).first()
+		season_stats = {}
+		# Summing the weekly stats for each week of the specified year for each 
+		# stat category
+		for game_stats in year_stats:
 
-					for stat_category in STAT_CATEGORIES:
-						if stat_category in season_stats:
-							season_stats[stat_category] += getattr(game_stats, stat_category)
-							
-						else:
-							season_stats[stat_category] = getattr(game_stats, stat_category)
+			for stat_category in STAT_CATEGORIES:
+				if stat_category in season_stats:
+					season_stats[stat_category] += getattr(game_stats, stat_category)
+				else:
+					season_stats[stat_category] = getattr(game_stats, stat_category)
 
-				return jsonify(player_game_stat_schema.dump(season_stats)), 200
-
-		else:
-			# Query to sum the weekly stats for a player across all years played
-			career_stats = db.session.query(Player, func.sum(PlayerGameStats.passing_attempts),
-				func.sum(PlayerGameStats.passing_completions),
-				func.sum(PlayerGameStats.passing_yards),
-				func.sum(PlayerGameStats.passing_touchdowns),
-				func.sum(PlayerGameStats.passing_interceptions),
-				func.sum(PlayerGameStats.passing_2point_conversions),
-				func.sum(PlayerGameStats.rushing_attempts),
-				func.sum(PlayerGameStats.rushing_yards),
-				func.sum(PlayerGameStats.rushing_touchdowns),
-				func.sum(PlayerGameStats.rushing_2point_conversions),
-				func.sum(PlayerGameStats.receptions),
-				func.sum(PlayerGameStats.recieving_yards),
-				func.sum(PlayerGameStats.recieving_touchdowns),
-				func.sum(PlayerGameStats.recieving_2point_conversions),
-				func.sum(PlayerGameStats.fumbles_lost),
-				func.sum(PlayerGameStats.fantasy_points)).join(Week, Year).filter(
-				PlayerGameStats.week_id == Week.id,
-				Week.year_id == Year.id,
-				Year.player_id == Player.id,
-				Player.name == name).group_by(Player.id).first()
-
-			# Feeding the results of the query back into PlayerGameStats object
-			result = PlayerGameStats(None,
-				None,
-				career_stats[1],
-				career_stats[2],
-				career_stats[3],
-				career_stats[4],
-				career_stats[5],
-				career_stats[6],
-				career_stats[7],
-				career_stats[8],
-				career_stats[9],
-				career_stats[10],
-				career_stats[11],
-				career_stats[12],
-				career_stats[13],
-				career_stats[14],
-				career_stats[15],
-				career_stats[16])
-
-			return jsonify(player_game_stat_schema.dump(result)), 200
+		return jsonify(PlayerGameStatsSchema().dump(season_stats)), 200
 
 	else:
-		return jsonify({ "Error": "Player name must be specified." })
+		career_stats = db.session.query(PlayerGameStats) \
+			.filter(PlayerGameStats.player_id == player.id) \
+			.all()
+
+		career_totals = {}
+		for game_stats in career_stats:
+			for stat_category in STAT_CATEGORIES:
+				if stat_category in career_totals:
+					career_totals[stat_category] += getattr(game_stats, stat_category)
+				else:
+					career_totals[stat_category] = getattr(game_stats, stat_category)
+
+		return jsonify(player_game_stat_schema.dump(career_totals)), 200
+
 
 
 @app.route('/api/v1/top', methods=['GET'])
@@ -229,7 +208,6 @@ def get_pos_top(current_user: User) -> list[dict]:
 
 		User must provide valid x-access-token to access this endpoint.
 	"""
-
 	year = request.args.get('year')
 	week = request.args.get('week')
 	pos = request.args.get('pos')
@@ -241,34 +219,23 @@ def get_pos_top(current_user: User) -> list[dict]:
 	if year:
 		if week:
 			# Query to get the weekly stats of all players for the specified week and year
-			top_players = db.session.query(PlayerGameStats, Player, Week, Year).filter(
-				PlayerGameStats.week_id == Week.id,
-				Week.week_number == week,
-				Week.year_id == Year.id,
-				Year.year_number == year,
-				Year.player_id == Player.id)
-
-			if pos:
-				if pos.upper() not in POSITIONS:
-					return jsonify({ "Error": "Specified position is invalid." })
-
-				# Query to filter top_players by position and order by fantasy points scored
-				top_players = top_players.filter(Player.position == pos.upper()).order_by(
-					PlayerGameStats.fantasy_points.desc()).limit(
-					int(limit) if limit else None).all()
-			else:
-				top_players = top_players.order_by(PlayerGameStats.fantasy_points.desc()).limit(
-					int(limit) if limit else None).all()
+			top_players = db.session.query(PlayerGameStats, Player).filter(
+				PlayerGameStats.week == week,
+				PlayerGameStats.year == year,
+				Player.id == PlayerGameStats.player_id,
+				Player.position == pos.upper() if pos else True).order_by(
+				PlayerGameStats.fantasy_points.desc()).limit(
+				int(limit) if limit else None).all()
 
 			if top_players:
 				result = []
 				for i in range(len(top_players)):
-					result.append(top_player_schema.dump({"rank": i + 1, 
+					result.append(TopPlayerSchema().dump({"rank": i + 1, 
 						"name": top_players[i][1].name, "stats": top_players[i][0]}))
 				return jsonify(result), 200
 
 			else:
-				return jsonify({"Error": "Year or week requested is invalid."}), 404
+				return jsonify({"Error": "No results for specified week and year."}), 404
 
 		else:
 			# Query to sum the weekly stats for all players across the specified year

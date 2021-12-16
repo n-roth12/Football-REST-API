@@ -1,4 +1,4 @@
-from api.models import PlayerGameStats, Player, Week, Year, MetaData
+from api.models import PlayerGameStats, Player
 from api import db, ma
 import json
 from collections import OrderedDict
@@ -36,19 +36,12 @@ def build() -> None:
 							player_object = new_player
 							db.session.add(player_object)
 
-						year_object = db.session.query(Year).filter(Year.year_number == year, Year.player == player_object).first()
-						if year_object == None:
-							new_year = Year(year_number=year)
-							new_year.player = player_object
-							year_object = new_year
-							db.session.add(year_object)
-
-						new_week = Week(week_number=week)
-						new_week.year = year_object
-						db.session.add(new_week)
 
 						stat_data = data[str(year)]["week_" + str(week)][name]
-						new_stats = PlayerGameStats(team=stat_data['team'], 
+						new_stats = PlayerGameStats(
+							week=week,
+							year=year,
+							team=stat_data['team'], 
 							game=stat_data['game'],
 							passing_attempts=stat_data['pass_atts'], 
 							passing_completions=stat_data['pass_cmps'],
@@ -66,13 +59,12 @@ def build() -> None:
 							recieving_2point_conversions=stat_data['rec_2pts'],
 							fumbles_lost=stat_data['fumbles_lost'],
 							fantasy_points=( (0.04 * stat_data['pass_yds']) + (4 * stat_data['pass_tds']) + (-2 * stat_data['pass_ints'])  + (2 * stat_data['pass_2pts']) + (0.1 * stat_data['rush_yds']) + (6 * stat_data['rush_tds']) + (2 * stat_data['rush_2pts']) + (stat_data['recs']) + (0.1 * stat_data['rec_yds']) + (6 * stat_data['rec_tds']) + (2 * stat_data['rec_2pts']) + (-2 * stat_data['fumbles_lost'])))
-						
-						new_stats.week = new_week
+						new_stats.player = player_object
+
 						db.session.add(new_stats)
 						db.session.commit()
 
 			print(f'Completed adding {position}s to database.')
-
 			f.close()
 
 if __name__ == '__main__':

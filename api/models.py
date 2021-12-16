@@ -15,15 +15,13 @@ class UserSchema(ma.SQLAlchemySchema):
 	username = ma.auto_field()
 	admin = ma.auto_field()
 
-# This class stores the data about the last time the database was updated
-class MetaData(db.Model):
-	id = db.Column(db.Integer, primary_key=True) 
-	week_of_update = db.Column(db.Integer())
-	year_of_update = db.Column(db.Integer())
 
 # Each set of game stats belongs to a specific player
 class PlayerGameStats(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
+	player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
+	week = db.Column(db.Integer())
+	year = db.Column(db.Integer())
 	team = db.Column(db.String(4))
 	game = db.Column(db.String(10))
 	passing_attempts = db.Column(db.Integer())
@@ -42,14 +40,15 @@ class PlayerGameStats(db.Model):
 	recieving_2point_conversions = db.Column(db.Integer())
 	fumbles_lost = db.Column(db.Integer())
 	fantasy_points = db.Column(db.Float())
-	week_id = db.Column(db.Integer(), db.ForeignKey('week.id'))
 
-	def __init__(self, team: str, game: str, passing_attempts: int, passing_completions: int, passing_yards: int,
+	def __init__(self, week: int, year: int, team: str, game: str, passing_attempts: int, passing_completions: int, passing_yards: int,
 		passing_touchdowns: int, passing_interceptions: int,
 		passing_2point_conversions: int, rushing_attempts: int, rushing_yards: int, rushing_touchdowns: int,
 		rushing_2point_conversions: int, receptions: int, recieving_yards: int, recieving_touchdowns: int,
 		recieving_2point_conversions: int, fumbles_lost: int, fantasy_points: float) -> None:
 
+		self.week = week
+		self.year = year
 		self.team = team
 		self.game = game
 		self.passing_attempts = passing_attempts
@@ -69,41 +68,13 @@ class PlayerGameStats(db.Model):
 		self.fumbles_lost = fumbles_lost
 		self.fantasy_points = fantasy_points
 
-# Player is the parent object
-class Player(db.Model):
-	id = db.Column(db.Integer(), primary_key=True)
-	name = db.Column(db.String(100))
-	position = db.Column(db.String(3))
-	years = db.relationship('Year', backref='player')
-
-	def __init__(self, name: str, position: str) -> None:
-		self.name = name
-		self.position = position
-
-# Each Week is a child of a Year and has a single PlayerGameStats as a child
-class Week(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
-	week_number = db.Column(db.Integer())
-	player_game_stats = db.relationship('PlayerGameStats', backref='week')
-	year_id = db.Column(db.Integer, db.ForeignKey('year.id'))
-
-	def __init__(self, week_number: int) -> None:
-		self.week_number = week_number
-
-# Each Year is a child of a Player and has Weeks as children
-class Year(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
-	year_number = db.Column(db.Integer())
-	weeks = db.relationship('Week', backref='year')
-	player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
-
-	def __init__(self, year_number: int) -> None:
-		self.year_number = year_number
-
 class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
 		model = PlayerGameStats
 
+	id = ma.auto_field()
+	week = ma.auto_field()
+	year = ma.auto_field()
 	team = ma.auto_field()
 	game = ma.auto_field()
 	passing_attempts = ma.auto_field()
@@ -122,6 +93,19 @@ class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 	recieving_2point_conversions = ma.auto_field()
 	fumbles_lost = ma.auto_field()
 	fantasy_points = ma.auto_field()
+	player_id = ma.auto_field()
+
+
+# Player is the parent object
+class Player(db.Model):
+	id = db.Column(db.Integer(), primary_key=True)
+	name = db.Column(db.String(100))
+	position = db.Column(db.String(3))
+	games = db.relationship('PlayerGameStats', backref='player')
+
+	def __init__(self, name: str, position: str) -> None:
+		self.name = name
+		self.position = position
 
 class PlayerSchema(ma.SQLAlchemySchema):
 	class Meta:
@@ -136,23 +120,6 @@ class TopPlayerSchema(ma.SQLAlchemySchema):
 		fields = ('rank', 'name', 'stats')
 
 	stats = ma.Nested(PlayerGameStatsSchema)
-
-class WeekSchema(ma.SQLAlchemySchema):
-	class Meta:
-		model = Week
-
-	id = ma.auto_field()
-	week_number = ma.auto_field()
-	player_game_stats = ma.auto_field()
-
-class YearSchema(ma.SQLAlchemySchema):
-	class Meta:
-		model = Year
-
-	id = ma.auto_field()
-	year_number = ma.auto_field()
-	weeks = ma.auto_field()
-
 
 
 
