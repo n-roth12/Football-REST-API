@@ -24,6 +24,7 @@ class MetaData(db.Model):
 # Each set of game stats belongs to a specific player
 class PlayerGameStats(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
+	team = db.Column(db.String(4))
 	game = db.Column(db.String(10))
 	passing_attempts = db.Column(db.Integer())
 	passing_completions = db.Column(db.Integer())
@@ -43,12 +44,13 @@ class PlayerGameStats(db.Model):
 	fantasy_points = db.Column(db.Float())
 	week_id = db.Column(db.Integer(), db.ForeignKey('week.id'))
 
-	def __init__(self, game: str, passing_attempts: int, passing_completions: int, passing_yards: int,
+	def __init__(self, team: str, game: str, passing_attempts: int, passing_completions: int, passing_yards: int,
 		passing_touchdowns: int, passing_interceptions: int,
 		passing_2point_conversions: int, rushing_attempts: int, rushing_yards: int, rushing_touchdowns: int,
 		rushing_2point_conversions: int, receptions: int, recieving_yards: int, recieving_touchdowns: int,
 		recieving_2point_conversions: int, fumbles_lost: int, fantasy_points: float) -> None:
 
+		self.team = team
 		self.game = game
 		self.passing_attempts = passing_attempts
 		self.passing_completions = passing_completions
@@ -102,6 +104,7 @@ class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
 		model = PlayerGameStats
 
+	team = ma.auto_field()
 	game = ma.auto_field()
 	passing_attempts = ma.auto_field()
 	passing_completions = ma.auto_field()
@@ -149,10 +152,6 @@ class YearSchema(ma.SQLAlchemySchema):
 	id = ma.auto_field()
 	year_number = ma.auto_field()
 	weeks = ma.auto_field()
-
-
-
-
 
 
 

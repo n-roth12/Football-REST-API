@@ -36,7 +36,7 @@ def pos_helper(pos: str, player_data_dict: dict) -> None:
         json.dump(player_data_dict, outfile)
 
 def pos_scrape(pos: str, player_data_dict: dict) -> None:
-    years = range(2012, 2022)
+    years = range(2012, 2021)
     thread_list = []
     for year in years:
         year_dict = {}
@@ -100,10 +100,12 @@ def week_scrape(pos: str, year: int, week: int, week_dict: dict) -> None:
             name = name_div.text
             stats = []
             stats_tds = name_tr.find_all('td')[1:-1]
+            team = stats_tds[0].find('b').text
             for stat_td in stats_tds:
                 stats.append(stat_td.text)
 
             player_dict = {
+                'team': team,
                 'game': stats[0],
                 'points': stats[1],
                 'pass_atts': int(stats[2]),
@@ -130,3 +132,5 @@ if __name__ == '__main__':
     scrape()
     finish = time.perf_counter()
     print(f'Finished in {round(finish - start, 2)} second(s).')
+
+

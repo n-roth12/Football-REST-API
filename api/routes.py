@@ -194,6 +194,7 @@ def get_week(current_user: User) -> dict:
 
 			# Feeding the results of the query back into PlayerGameStats object
 			result = PlayerGameStats(None,
+				None,
 				career_stats[1],
 				career_stats[2],
 				career_stats[3],
@@ -307,6 +308,7 @@ def get_pos_top(current_user: User) -> list[dict]:
 			for i in range(len(top_players)):
 				# Feeding the results of the query back into a PlayerGameStats object
 				game_stats = PlayerGameStats(None,
+					None,
 					top_players[i][1],
 					top_players[i][2],
 					top_players[i][3],

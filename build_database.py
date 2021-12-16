@@ -48,7 +48,8 @@ def build() -> None:
 						db.session.add(new_week)
 
 						stat_data = data[str(year)]["week_" + str(week)][name]
-						new_stats = PlayerGameStats(game=stat_data['game'],
+						new_stats = PlayerGameStats(team=stat_data['team'], 
+							game=stat_data['game'],
 							passing_attempts=stat_data['pass_atts'], 
 							passing_completions=stat_data['pass_cmps'],
 							passing_yards=stat_data['pass_yds'],
