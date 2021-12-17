@@ -117,7 +117,7 @@ class PlayerSchema(ma.SQLAlchemySchema):
 
 class TopPlayerSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('rank', 'name', 'stats')
+		fields = ('rank', 'name', 'position', 'stats')
 
 	stats = ma.Nested(PlayerGameStatsSchema)
 

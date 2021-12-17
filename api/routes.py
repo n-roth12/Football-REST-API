@@ -227,8 +227,11 @@ def get_pos_top(current_user: User) -> list[dict]:
 			if top_players:
 				result = []
 				for i in range(len(top_players)):
+					print(top_players[i][1].position)
 					result.append(TopPlayerSchema().dump({"rank": i + 1, 
-						"name": top_players[i][1].name, "stats": top_players[i][0]}))
+						"name": top_players[i][1].name, 
+						"position": top_players[i][1].position, 
+						"stats": top_players[i][0]}))
 				return jsonify(result), 200
 
 			else:
