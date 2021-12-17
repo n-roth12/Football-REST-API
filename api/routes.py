@@ -104,9 +104,6 @@ def get_players(current_user: User, id: str) -> list[dict]:
 	limit = request.args.get('limit')
 	players = db.session.query(Player)
 
-	if name:
-		player = db.session.add()
-
 	if pos:
 		if pos.upper() not in POSITIONS:
 			return jsonify({ "Error": "Specified position is invalid." })
