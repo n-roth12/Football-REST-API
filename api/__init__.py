@@ -8,7 +8,7 @@ app = Flask(__name__, static_folder=os.path.abspath('/Users/NolanRoth/Desktop/FF
 
 if os.environ.get('IS_HEROKU') == 'True':
 	app.debug = False
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://jqprysmwjukzxd:6ab2ccae33aa279d8090a72a73598ab02e2a87a866a59e64ed130eaa1da2f1ac@ec2-52-200-188-218.compute-1.amazonaws.com:5432/d2c3m9q8jbogls'
+	app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('PROD_DATABASE_URI')
 	app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 	app.config['TEST_ACCESS_TOKEN'] = os.environ.get('TEST_ACCESS_TOKEN')
 	app.config['BASE_URL'] = os.environ.get('BASE_URL')
