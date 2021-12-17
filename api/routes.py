@@ -113,7 +113,7 @@ def get_players(current_user: User, id: str) -> list[dict]:
 	if limit:
 		players = players.limit(int(limit))
 
-	return jsonify(players_schema.dump(players.all())), 200
+	return jsonify(PlayerSchema(many=True).dump(players.all())), 200
 
 
 @app.route('/api/v1/stats', methods=['GET'])
