@@ -83,7 +83,7 @@ def get_playergamestats(current_user, id):
 @token_required
 def get_lineup_playergamestats(current_user):
 	data1 = request.data
-	data = json.loads(data.decode('utf-8'))
+	data = json.loads(data1.decode('utf-8'))
 	if not data:
 		return jsonify({ 'Error': 'No PlayerGameStats requested!' })
 	result = {}
