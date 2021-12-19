@@ -82,8 +82,8 @@ def get_playergamestats(current_user, id):
 @app.route('/api/v1/playergamestats', methods=['POST'])
 @token_required
 def get_lineup_playergamestats(current_user):
-	data = request.data
-	print(data)
+	data1 = request.data
+	data = json.loads(data.decode('utf-8'))
 	if not data:
 		return jsonify({ 'Error': 'No PlayerGameStats requested!' })
 	result = {}
