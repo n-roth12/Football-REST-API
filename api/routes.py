@@ -87,12 +87,13 @@ def get_lineup_playergamestats(current_user):
 		return jsonify({ 'Error': 'No PlayerGameStats requested!' })
 	result = {}
 	for key, value in data.items():
-		player_data = db.session.query(PlayerGameStats, Player) \
-			.filter(PlayerGameStats.id == value,
-				Player.id == PlayerGameStats.player_id).first()
-		if player_data:
-			result[key] = TopPlayerSchema().dump({"name": player_data[1].name, 
-				"position": player_data[1].position, "stats": player_data[0]})
+		if not (value == {} or key == 'points' or key == 'user_id' or key == 'week' or key == 'year' or key == 'id'):
+			player_data = db.session.query(PlayerGameStats, Player) \
+				.filter(PlayerGameStats.id == value,
+					Player.id == PlayerGameStats.player_id).first()
+			if player_data:
+				result[key] = TopPlayerSchema().dump({"name": player_data[1].name, 
+					"position": player_data[1].position, "stats": player_data[0]})
 	return jsonify(result)
 
 
