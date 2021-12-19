@@ -62,25 +62,9 @@ def convertName(name):
 
 
 ##### Routes associated with fetching player data #####
-@app.route('/api/v1/playergamestats', defaults={'id': None}, methods=['GET'])
 @app.route('/api/v1/playergamestats/<id>', methods=['GET'])
 @token_required
 def get_playergamestats(current_user, id):
-
-	if not id:
-		data = request.get_json()
-		if not data:
-			return jsonify({ 'Error': 'No PlayerGameStats requested!' })
-		result = {}
-		for key, value in data.items():
-			print(key, value)
-			player_data = db.session.query(PlayerGameStats, Player) \
-				.filter(PlayerGameStats.id == value,
-					Player.id == PlayerGameStats.player_id).first()
-			if player_data:
-				result[key] = TopPlayerSchema().dump({"name": player_data[1].name, 
-					"position": player_data[1].position, "stats": player_data[0]})
-		return jsonify(result)
 
 	playergamestat = db.session.query(PlayerGameStats).filter(PlayerGameStats.id == id).first()
 	if playergamestat:
@@ -93,6 +77,23 @@ def get_playergamestats(current_user, id):
 
 	return jsonify({ 'Error': 'No PlayerGameStat with the specified id!' })
 
+# Route for fetching the playergamestats of an entire lineup given
+# the playergamestats ids of the players in the lineup
+@app.route('/api/v1/playergamestats', methods=['POST'])
+@token_required
+def get_lineup_playergamestats(current_user):
+	data = request.get_json()
+	if not data:
+		return jsonify({ 'Error': 'No PlayerGameStats requested!' })
+	result = {}
+	for key, value in data.items():
+		player_data = db.session.query(PlayerGameStats, Player) \
+			.filter(PlayerGameStats.id == value,
+				Player.id == PlayerGameStats.player_id).first()
+		if player_data:
+			result[key] = TopPlayerSchema().dump({"name": player_data[1].name, 
+				"position": player_data[1].position, "stats": player_data[0]})
+	return jsonify(result)
 
 
 @app.route('/api/v1/players', defaults={'id': None}, methods=['GET'])
