@@ -55,7 +55,7 @@ def token_required(f):
 
 	return decorated
 
-def convertName(name):
+def convertName(name: str):
 	names = name.split("_")
 	names = [name.capitalize() for name in names]
 	return ' '.join(names)
@@ -66,7 +66,7 @@ def convertName(name):
 # Route to retrieve PlayerGameStats database entry by id
 @app.route('/api/playergamestats/<id>', methods=['GET'])
 @token_required
-def get_playergamestats(current_user, id):
+def get_playergamestats(current_user: User, id: int):
 
 	playergamestat = db.session.query(PlayerGameStats).filter(PlayerGameStats.id == id).first()
 	if playergamestat:
@@ -75,6 +75,7 @@ def get_playergamestats(current_user, id):
 		# result['name'] = player.name
 		# result['stats'] = PlayerGameStats().dump(playergamestat)
 		# return jsonify(result), 200
+		print(type(jsonify(PlayerGameStatsSchema().dump(playergamestat))))
 		return jsonify(PlayerGameStatsSchema().dump(playergamestat))
 
 	return jsonify({ 'Error': 'No PlayerGameStat with the specified id!' })
@@ -84,7 +85,7 @@ def get_playergamestats(current_user, id):
 # the playergamestats ids of the players in the lineup
 @app.route('/api/playergamestats', methods=['POST'])
 @token_required
-def get_lineup_playergamestats(current_user):
+def get_lineup_playergamestats(current_user: User):
 	lineup_data = request.data
 	data = json.loads(lineup_data.decode('utf-8'))
 	if not data:
@@ -111,7 +112,7 @@ def get_lineup_playergamestats(current_user):
 @app.route('/api/players', defaults={'id': None}, methods=['GET'])
 @app.route('/api/players/<id>', methods=['GET'])
 @token_required
-def get_players(current_user: User, id: str) -> list[dict]:
+def get_players(current_user: User, id: str):
 	""" Funciton to return the list of Players via the /players api endpoint.
 
 		Passing an id will return the player with the corresponding id.
@@ -146,7 +147,7 @@ def get_players(current_user: User, id: str) -> list[dict]:
 
 @app.route('/api/stats', methods=['GET'])
 @token_required
-def get_week(current_user: User) -> dict:
+def get_week(current_user: User):
 	""" Function to return the stats of Players via the /stats api endpoint.
 
 	Stats can be filtered by Player name, year, and week. If week is not specified,
@@ -223,7 +224,7 @@ def get_week(current_user: User) -> dict:
 
 @app.route('/api/top', methods=['GET'])
 @token_required
-def get_pos_top(current_user: User) -> list[dict]:
+def get_pos_top(current_user: User):
 	""" Function to return the top weekly performances via the /top api endpoint.
 
 		Performances can be filtered by year, week, and position. If week is not specified,
@@ -348,7 +349,7 @@ def get_pos_top(current_user: User) -> list[dict]:
 
 @app.route('/api/top_performances', methods=['GET'])
 @token_required
-def get_top_performances(current_user: User) -> list[dict]:
+def get_top_performances(current_user: User):
 	""" Function to return the top perfomances for a given year via the 
 		/top_performances api endpoint.
 
@@ -401,10 +402,9 @@ def get_top_performances(current_user: User) -> list[dict]:
 
 
 
-
 @app.route('/api/user', methods=['POST'])
 @token_required
-def create_user(current_user: User) -> str:
+def create_user(current_user: User):
 	""" Function to create a new User via the /user api endpoint.
 
 		User must be an admin to successfully create a new User. The username and 
@@ -431,7 +431,7 @@ def create_user(current_user: User) -> str:
 
 @app.route('/api/promote_user/<public_id>', methods=['PUT'])
 @token_required
-def promote_user(current_user: User, public_id: str) -> str:
+def promote_user(current_user: User, public_id: str):
 	""" Function to promote a User to admin via the /promote_user api endpoint.
 
 		User must be an admin to successfully promote another User. User to promote 
@@ -455,7 +455,7 @@ def promote_user(current_user: User, public_id: str) -> str:
 @app.route('/api/users', defaults={'public_id': None}, methods=['GET'])
 @app.route('/api/users/<public_id>', methods=['GET'])
 @token_required
-def get_users(current_user: User, public_id: str) -> str:
+def get_users(current_user: User, public_id: str):
 	""" Function to handle fetching the Users from the database via the /user
 		api endpoint. 
 
@@ -483,7 +483,7 @@ def get_users(current_user: User, public_id: str) -> str:
 
 @app.route('/api/user/<public_id>', methods=['DELETE'])
 @token_required
-def delete_user(current_user: User, public_id: str) -> str:
+def delete_user(current_user: User, public_id: str):
 	""" Function to handle the deletion of a user via the /user api endpoint.
 
 		User must be an admin in order to successfully delete a user from the 
@@ -503,7 +503,7 @@ def delete_user(current_user: User, public_id: str) -> str:
 	return jsonify({'message' : 'The user has been deleted.'})
 
 @app.route('/api/login')
-def login() -> str:
+def login():
 	""" Function to handle the logging in of a user via the /login api endpoint.
 
 		User must pass their username and password as parameters of HTTP Basic Auth
@@ -535,7 +535,7 @@ def login() -> str:
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 @limiter.exempt
-def home_page() -> None:
+def home_page():
 	""" Function return the home page html template, including loading and
 		handling register and login form submission. 
 
@@ -597,7 +597,7 @@ def home_page() -> None:
 
 
 @app.route('/api/sample/players1', methods=['GET'])
-def test_players1() -> str:
+def test_players1():
 	""" Function to return a sample output of /players endpoint. 
 		Returns the first 5 players in the database. 
 	"""
@@ -609,7 +609,7 @@ def test_players1() -> str:
 
 
 @app.route('/api/sample/players2', methods=['GET'])
-def test_players2() -> str:
+def test_players2():
 	""" Function to return a sample output of /players endpoint. 
 		Returns the first 10 WRs in the database. 
 	"""
@@ -621,7 +621,7 @@ def test_players2() -> str:
 
 
 @app.route('/api/sample/stats1', methods=['GET'])
-def test_stats1() -> str:
+def test_stats1():
 	""" Function to return a sample output of /stats endpoint.
 		Returns the stats for Calvin Ridley.
 	"""
@@ -633,7 +633,7 @@ def test_stats1() -> str:
 
 
 @app.route('/api/sample/stats2', methods=['GET'])
-def test_stats2() -> str:
+def test_stats2():
 	""" Function to return a sample output of /stats endpoint.
 		Returns the stats for Dalvin Cook, 2020.
 	"""
@@ -645,7 +645,7 @@ def test_stats2() -> str:
 
 
 @app.route('/api/sample/stats3', methods=['GET'])
-def test_stats3() -> str:
+def test_stats3():
 	""" Function to return a sample output of /stats endpoint.
 		Returns the stats for Justin Herbert, 2020, week 11.
 	"""
@@ -657,7 +657,7 @@ def test_stats3() -> str:
 
 
 @app.route('/api/sample/top1', methods=['GET'])
-def test_top1() -> str:
+def test_top1():
 	""" Function to return a sample output of /top endpoint.
 		Returns the top 5 players for 2017.
 	"""
@@ -669,7 +669,7 @@ def test_top1() -> str:
 
 
 @app.route('/api/sample/top2', methods=['GET'])
-def test_top2() -> str:
+def test_top2():
 	""" Function to return a sample output of /top endpoint.
 		Returns the top 6 players of 2015, week 7.
 	"""
@@ -681,7 +681,7 @@ def test_top2() -> str:
 
 
 @app.route('/api/sample/top3', methods=['GET'])
-def test_top3() -> str:
+def test_top3():
 	""" Function to return a sample output of /top endpoint.
 		Returns the top 5 tight ends of 2020.
 	"""
@@ -693,7 +693,7 @@ def test_top3() -> str:
 
 
 @app.route('/api/sample/performances1', methods=['GET'])
-def test_performances1() -> str:
+def test_performances1():
 	""" Function to return the sample output of /performances endpoint.
 		Returns the top 5 RB performances since 2012.
 	"""
@@ -705,7 +705,7 @@ def test_performances1() -> str:
 
 
 @app.route('/api/sample/performances2', methods=['GET'])
-def test_performances2() -> str:
+def test_performances2():
 	""" Function to return the sample output of /performances endpoint.
 		Returns the top 5 performances of 2017.
 	"""
