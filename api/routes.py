@@ -70,12 +70,6 @@ def get_playergamestats(current_user: User, id: int):
 
 	playergamestat = db.session.query(PlayerGameStats).filter(PlayerGameStats.id == id).first()
 	if playergamestat:
-		# player = db.session.query(Player).filter(Player.id == playergamestat.player_id).first()
-		# result = {}
-		# result['name'] = player.name
-		# result['stats'] = PlayerGameStats().dump(playergamestat)
-		# return jsonify(result), 200
-		print(type(jsonify(PlayerGameStatsSchema().dump(playergamestat))))
 		return jsonify(PlayerGameStatsSchema().dump(playergamestat))
 
 	return jsonify({ 'Error': 'No PlayerGameStat with the specified id!' })
