@@ -15,6 +15,8 @@ import datetime
 import uuid
 from functools import wraps
 import requests
+import redis 
+
 
 # These are the stat categories used in the PlayerGameStats model 
 STAT_CATEGORIES = ['passing_attempts', 'passing_completions',
@@ -30,6 +32,7 @@ POSITIONS = ['QB', 'RB', 'WR','TE']
 
 limiter = Limiter(app, key_func=get_remote_address, 
 	default_limits=["100000000/day;100000000/hour;100000/minute"])
+
 
 def token_required(f):
 	@wraps(f)
@@ -59,7 +62,6 @@ def convertName(name: str):
 	names = name.split("_")
 	names = [name.capitalize() for name in names]
 	return ' '.join(names)
-
 
 ##### Routes associated with fetching player data #####
 
@@ -695,7 +697,7 @@ def test_performances1():
 	result = requests.get(f'{app.config["BASE_URL"]}/api/performances?pos=RB&limit=5', 
 		headers={'x-access-token':token})
 
-	return jsonify(result.json())
+	return jsonify(result.get_json())
 
 
 @app.route('/api/sample/performances2', methods=['GET'])
@@ -706,8 +708,9 @@ def test_performances2():
 	token = app.config['TEST_ACCESS_TOKEN']
 	result = requests.get(f'{app.config["BASE_URL"]}/api/performances?year=2017&limit=5', 
 		headers={'x-access-token':token})
+	print(result)
 
-	return jsonify(result.json())
+	return jsonify(result.get_json())
 
 
 
