@@ -74,19 +74,35 @@
 						<section>
 							<h3>Generate a Request</h3>
 							<hr>
-							<p>
-								Use the following tool to create a request and press <em>Submit</em> to see the response.
-							</p>
-							<span>
-								Request: <strong>localhost:5000/api</strong>
-								<select>
-									<option value="players">/players</option>
-									<option value="stats">/stats</option>
-									<option value="top">/top</option>
-									<option value="performances">/performances</option>
-								</select>
-							</span>
-
+							<div>
+								<p>
+									Use the following tool to create a request and press <em>Submit</em> to see the response.
+								</p>
+								<form method="GET">
+									<span>
+										Request: <strong>https://ffbapi.herokuapp.com/api</strong>
+										<select name="endpoint">
+											<option value="players">/players</option>
+											<option value="stats">/stats</option>
+											<option value="top">/top</option>
+											<option value="performances">/performances</option>
+										</select>
+										?
+										<input type="text" name="query-string" placeholder="enter query..."></input>
+										<input type="hidden" name="form-name" value="request-form">
+										<button type="submit" value="Submit">Submit!</button>
+									</span>
+								</form>
+							</div>
+							<br>
+							{% if query_result %}
+							<div>
+								{% if request_string %}
+									<p>Response for <strong>"{{request_string}}"</strong></p>
+								{% endif %}
+								<textarea>{{ query_result }}</textarea>
+							</div>
+							{% endif %}
 						</section>
 					</div>
 
@@ -252,6 +268,10 @@
 		}
 		.alert {
 			margin: 0;
+		}
+		textarea {
+			width: 100%;
+			max-height: 300px;
 		}
 
 	</style>

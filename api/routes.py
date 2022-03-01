@@ -16,6 +16,7 @@ import uuid
 from functools import wraps
 import requests
 import redis 
+import random
 
 
 # These are the stat categories used in the PlayerGameStats model 
@@ -28,7 +29,16 @@ STAT_CATEGORIES = ['passing_attempts', 'passing_completions',
 
 # These are the four positions of Players in the database
 POSITIONS = ['QB', 'RB', 'WR','TE']
-
+YEARS = range(2012, 2021)
+QUERY_MAP = {'players': 
+				['pos', 'limit'], 
+			'stats':
+				['name', 'year', 'week'], 
+			'top':
+				['year', 'week', 'pos', 'limit'], 
+			'performances':
+				['year', 'pos', 'limit']
+			}
 
 # limiter = Limiter(app, key_func=get_remote_address, 
 # 	default_limits=["100000000/day;100000000/hour;100000/minute"])
@@ -534,6 +544,19 @@ def home_page():
 	"""
 	register_form = RegisterForm()
 	login_form = LoginForm()
+	query_result = None
+	request_string = None
+
+	if request.method == 'GET':
+		if request.args and request.args.get('form-name') == 'request-form':
+			endpoint = request.args.get('endpoint')
+			if not endpoint or endpoint not in ['players', 'stats', 'top', 'performances']:
+				flash(f'Invalid endpoint used for request. Please try a different endpoint.', category='danger')
+			query_string = request.args.get('query-string')
+			request_string = f'{app.config["BASE_URL"]}/api/{endpoint}?{query_string}'
+			result = requests.get(request_string)
+			query_result = result.json()
+
 
 	if request.method == 'POST':
 		if request.form['form-name'] == 'register-form':
@@ -580,8 +603,12 @@ def home_page():
 					flash(f'There was an error with logging in: {err_msg}', 
 						category='danger')
 
+	category = list(QUERY_MAP.keys())[random.randint(0, len(QUERY_MAP.keys()) - 1)]
+	query = QUERY_MAP[category][random.randint(0, len(QUERY_MAP[category]) - 1)]
+
 	return render_template('index.html', 
-		register_form=register_form, login_form=login_form)
+		register_form=register_form, login_form=login_form, 
+		query_result=query_result, request_string=request_string)
 
 
 @app.route('/api/sample/players1', methods=['GET'])
@@ -613,7 +640,6 @@ def test_stats1():
 	"""
 	token = app.config['TEST_ACCESS_TOKEN']
 	result = requests.get(f'{app.config["BASE_URL"]}/api/stats?name=Calvin_Ridley')
-	print(result)
 
 	return jsonify(result.json())
 
