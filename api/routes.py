@@ -348,7 +348,7 @@ def get_pos_top():
 
 
 
-@app.route('/api/top_performances', methods=['GET'])
+@app.route('/api/performances', methods=['GET'])
 def get_top_performances():
 	""" Function to return the top perfomances for a given year via the 
 		/top_performances api endpoint.
@@ -372,7 +372,6 @@ def get_top_performances():
 	else:
 		top_players = db.session.query(Player, PlayerGameStats) \
 			.filter(
-				PlayerGameStats.year == year,
 				PlayerGameStats.player_id == Player.id)
 	
 	if pos:
@@ -399,6 +398,86 @@ def get_top_performances():
 
 	else:
 		return jsonify({'Error': 'No data for the year requested.'}), 404
+
+
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/home', methods=['GET', 'POST'])
+def home_page():
+	""" Function return the home page html template, including loading and
+		handling register and login form submission. 
+
+		If user submits login form successfully, they are provided their 
+		x-access-token via a flash message. If user submits the register form 
+		successfully, a new user with their credentials is created in the database
+		and they are provided their x-access token via a flash message. 
+	"""
+	register_form = RegisterForm()
+	login_form = LoginForm()
+	query_result = None
+	request_string = None
+
+	if request.method == 'GET':
+		if request.args and request.args.get('form-name') == 'request-form':
+			endpoint = request.args.get('endpoint')
+			if not endpoint or endpoint not in ['players', 'stats', 'top', 'performances']:
+				flash(f'Invalid endpoint used for request. Please try a different endpoint.', category='danger')
+			query_string = request.args.get('query-string')
+			request_string = f'{app.config["BASE_URL"]}/api/{endpoint}?{query_string}'
+			result = requests.get(request_string)
+			query_result = result.json()
+
+
+	if request.method == 'POST':
+		if request.form['form-name'] == 'register-form':
+			if register_form.validate_on_submit():
+
+				hashed_password = generate_password_hash(register_form.password1.data, 
+					method='sha256')
+
+				new_user = User(public_id=str(uuid.uuid4()), 
+					username=register_form.username.data, 
+					password=hashed_password, admin=False)
+
+				db.session.add(new_user)
+				db.session.commit()
+
+				token = jwt.encode({'public_id' : new_user.public_id}, 
+					app.config['SECRET_KEY'], 
+					algorithm='HS256')
+
+				flash(f'You have been successfully registered! Your access token is:\n{token}.')
+
+			elif register_form.errors != {}:
+				for err_msg in register_form.errors.values():
+					flash(f'There was an error with registering: {err_msg}', category='danger')
+
+		if request.form['form-name'] == 'login-form':
+			if login_form.validate_on_submit():
+				user = db.session.query(User).filter(
+					User.username == login_form.username.data).first()
+
+				if user and check_password_hash(user.password, login_form.password.data):
+					token = jwt.encode({'public_id' : user.public_id}, 
+						app.config['SECRET_KEY'], algorithm='HS256')
+
+					flash(f'You have been successfully logged in! Your access token is:\n{token}.', 
+						category='success')
+
+				else:
+					flash('Unable to log in: incorrect username or password.', 
+						category='danger')
+
+			elif login_form.errors != {}:
+				for err_msg in login_form.errors.values():
+					flash(f'There was an error with logging in: {err_msg}', 
+						category='danger')
+
+	category = list(QUERY_MAP.keys())[random.randint(0, len(QUERY_MAP.keys()) - 1)]
+	query = QUERY_MAP[category][random.randint(0, len(QUERY_MAP[category]) - 1)]
+
+	return render_template('index.html', 
+		register_form=register_form, login_form=login_form, 
+		query_result=query_result, request_string=request_string)
 
 
 
@@ -529,174 +608,6 @@ def get_top_performances():
 
 # 	return make_response('Could not verify', 401, 
 # 		{'WWW-Authenticate' : 'Basic realm-"Login required!"'})
-
-
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/home', methods=['GET', 'POST'])
-def home_page():
-	""" Function return the home page html template, including loading and
-		handling register and login form submission. 
-
-		If user submits login form successfully, they are provided their 
-		x-access-token via a flash message. If user submits the register form 
-		successfully, a new user with their credentials is created in the database
-		and they are provided their x-access token via a flash message. 
-	"""
-	register_form = RegisterForm()
-	login_form = LoginForm()
-	query_result = None
-	request_string = None
-
-	if request.method == 'GET':
-		if request.args and request.args.get('form-name') == 'request-form':
-			endpoint = request.args.get('endpoint')
-			if not endpoint or endpoint not in ['players', 'stats', 'top', 'performances']:
-				flash(f'Invalid endpoint used for request. Please try a different endpoint.', category='danger')
-			query_string = request.args.get('query-string')
-			request_string = f'{app.config["BASE_URL"]}/api/{endpoint}?{query_string}'
-			result = requests.get(request_string)
-			query_result = result.json()
-
-
-	if request.method == 'POST':
-		if request.form['form-name'] == 'register-form':
-			if register_form.validate_on_submit():
-
-				hashed_password = generate_password_hash(register_form.password1.data, 
-					method='sha256')
-
-				new_user = User(public_id=str(uuid.uuid4()), 
-					username=register_form.username.data, 
-					password=hashed_password, admin=False)
-
-				db.session.add(new_user)
-				db.session.commit()
-
-				token = jwt.encode({'public_id' : new_user.public_id}, 
-					app.config['SECRET_KEY'], 
-					algorithm='HS256')
-
-				flash(f'You have been successfully registered! Your access token is:\n{token}.')
-
-			elif register_form.errors != {}:
-				for err_msg in register_form.errors.values():
-					flash(f'There was an error with registering: {err_msg}', category='danger')
-
-		if request.form['form-name'] == 'login-form':
-			if login_form.validate_on_submit():
-				user = db.session.query(User).filter(
-					User.username == login_form.username.data).first()
-
-				if user and check_password_hash(user.password, login_form.password.data):
-					token = jwt.encode({'public_id' : user.public_id}, 
-						app.config['SECRET_KEY'], algorithm='HS256')
-
-					flash(f'You have been successfully logged in! Your access token is:\n{token}.', 
-						category='success')
-
-				else:
-					flash('Unable to log in: incorrect username or password.', 
-						category='danger')
-
-			elif login_form.errors != {}:
-				for err_msg in login_form.errors.values():
-					flash(f'There was an error with logging in: {err_msg}', 
-						category='danger')
-
-	category = list(QUERY_MAP.keys())[random.randint(0, len(QUERY_MAP.keys()) - 1)]
-	query = QUERY_MAP[category][random.randint(0, len(QUERY_MAP[category]) - 1)]
-
-	return render_template('index.html', 
-		register_form=register_form, login_form=login_form, 
-		query_result=query_result, request_string=request_string)
-
-
-@app.route('/api/sample/players1', methods=['GET'])
-def test_players1():
-	""" Function to return a sample output of /players endpoint. 
-		Returns the first 5 players in the database. 
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/players?limit=5')
-
-	return result
-
-
-@app.route('/api/sample/players2', methods=['GET'])
-def test_players2():
-	""" Function to return a sample output of /players endpoint. 
-		Returns the first 10 WRs in the database. 
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/players?pos=WR&limit=10')
-
-	return jsonify(result.json())
-
-
-@app.route('/api/sample/stats1', methods=['GET'])
-def test_stats1():
-	""" Function to return a sample output of /stats endpoint.
-		Returns the stats for Calvin Ridley.
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/stats?name=Calvin_Ridley')
-
-	return jsonify(result.json())
-
-
-@app.route('/api/sample/stats2', methods=['GET'])
-def test_stats2():
-	""" Function to return a sample output of /stats endpoint.
-		Returns the stats for Dalvin Cook, 2020.
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/stats?name=Dalvin_Cook&year=2019')
-
-	return jsonify(result.json())
-
-
-@app.route('/api/sample/stats3', methods=['GET'])
-def test_stats3():
-	""" Function to return a sample output of /stats endpoint.
-		Returns the stats for Justin Herbert, 2020, week 11.
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/stats?name=Justin_Herbert&year=2020&week=11')
-
-	return jsonify(result.json())
-
-
-@app.route('/api/sample/top1', methods=['GET'])
-def test_top1():
-	""" Function to return a sample output of /top endpoint.
-		Returns the top 5 players for 2017.
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top?year=2017&limit=5')
-
-	return jsonify(result.json())
-
-
-@app.route('/api/sample/top2', methods=['GET'])
-def test_top2():
-	""" Function to return a sample output of /top endpoint.
-		Returns the top 6 players of 2015, week 7.
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top?year=2015&week=7&limit=6')
-
-	return jsonify(result.json())
-
-
-@app.route('/api/sample/top3', methods=['GET'])
-def test_top3():
-	""" Function to return a sample output of /top endpoint.
-		Returns the top 5 tight ends of 2020.
-	"""
-	token = app.config['TEST_ACCESS_TOKEN']
-	result = requests.get(f'{app.config["BASE_URL"]}/api/top?year=2020&pos=TE&limit=5')
-
-	return jsonify(result.json())
 
 
 

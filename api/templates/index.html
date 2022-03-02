@@ -72,7 +72,7 @@
 
 					<div class="content">
 						<section>
-							<h3>Generate a Request</h3>
+							<h3>Create a Request</h3>
 							<hr>
 							<div>
 								<p>
@@ -98,7 +98,7 @@
 							{% if query_result %}
 							<div>
 								{% if request_string %}
-									<p>Response for <strong>"{{request_string}}"</strong></p>
+									<p>Response for <strong>"{{request_string}}"</strong>:</p>
 								{% endif %}
 								<textarea>{{ query_result }}</textarea>
 							</div>
@@ -122,8 +122,8 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/players?limit=5 : </strong><a href='/api/sample/players1'>Response</a></li>
-										<li><strong>/players?pos=WR&limit=10 : </strong><a href='/api/sample/players2'>Response</a></li>
+										<li><strong>/players?limit=5 : </strong><a href='/api/players?limit=5'>Response</a></li>
+										<li><strong>/players?pos=WR&limit=10 : </strong><a href='/api/players?pos=WR&limit=10'>Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -139,9 +139,9 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/stats?name=calvin_ridley : </strong><a href="/api/sample/stats1">Response</a></li>
-										<li><strong>/stats?name=dalvin_cook&year=2019 : </strong><a href="/api/sample/stats2"> Response</a></li>
-										<li><strong>/stats?name=justin_herbert&year=2020&week=11 : </strong><a href="/api/sample/stats3">Response</a></li>
+										<li><strong>/stats?name=calvin_ridley : </strong><a href="/api/stats?name=Calvin_Ridley">Response</a></li>
+										<li><strong>/stats?name=dalvin_cook&year=2019 : </strong><a href="/api/stats?name=Dalvin_Cook&year=2019"> Response</a></li>
+										<li><strong>/stats?name=justin_herbert&year=2020&week=11 : </strong><a href="/api/stats?name=Justin_Herbert&year=2020&week=11">Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -158,9 +158,9 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/top?year=2017&limit=5 : </strong><a href="/api/sample/top1">Response</a></li>
-										<li><strong>/top?year=2015&week=7&limit=6 : </strong><a href="/api/sample/top2">Response</a></li>
-										<li><strong>/top?year=2020&pos=TE&limit=5 : </strong><a href="/api/sample/top3">Response</a></li>
+										<li><strong>/top?year=2017&limit=5 : </strong><a href="/api/top?year=2017&limit=5">Response</a></li>
+										<li><strong>/top?year=2015&week=7&limit=6 : </strong><a href="/api/top?year=2015&week=7&limit=6">Response</a></li>
+										<li><strong>/top?year=2020&pos=TE&limit=5 : </strong><a href="/api/top?year=2020&pos=TE&limit=5">Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -176,8 +176,8 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/performances?pos=RB&limit=5 : </strong><a href="/api/sample/performances1">Response</a></li>
-										<li><strong>/performances?year=2017&limit=5 : </strong><a href="/api/sample/performances2">Response</a></li>
+										<li><strong>/performances?pos=RB&limit=5 : </strong><a href="/api/performances?pos=RB&limit=5">Response</a></li>
+										<li><strong>/performances?year=2017&limit=5 : </strong><a href="/api/performances?year=2017&limit=5">Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -271,7 +271,6 @@
 		}
 		textarea {
 			width: 100%;
-			max-height: 300px;
 		}
 
 	</style>
