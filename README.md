@@ -4,10 +4,26 @@ An API for retrieving information about NFL players.
 ## Getting Started
 <ul>
   <li>Clone the repository</li>
-  <li>Run ```pipenv shell``` inside /FFBApi to start python virtual environment.</li>
-  <li>Run ```pipenv install -r requirements.txt``` to install project packages.</li>
-  <li>Run ```python app.py``` to start the server.</li>
-  <li>Navigate to ```localhost:5000``` to view the frontend.</li>
+  <li>Run 
+  ```
+  pipenv shell
+  ```
+  inside /FFBApi to start python virtual environment.</li>
+  <li>Run 
+  ```
+  pipenv install -r requirements.txt
+  ```
+  to install project packages.</li>
+  <li>Run 
+  ```
+  python app.py
+  ```
+  to start the server.</li>
+  <li>Navigate to 
+  ```
+  localhost:5000
+  ```
+  to view the frontend.</li>
 </ul>
 
 ## Database
