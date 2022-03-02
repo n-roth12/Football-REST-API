@@ -22,7 +22,7 @@
 				{% endfor %}
 			{% endif %}
 		{% endwith %}
-		<nav class="mb-5 navbar navbar-dark navbar-expand-sm fixed-top">
+		<!-- <nav class="mb-5 navbar navbar-dark navbar-expand-sm fixed-top">
 			<div class="container">
 				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
 					<span class="navbar-toggler-icon"></span>
@@ -38,11 +38,10 @@
 					</ul>
 				</div>
 			</div>
-		</nav>
+		</nav> -->
 		<div class="header">
 			<div id="header-inner">
-				<h1 class="text-center"><i class="fas fa-football-ball"></i> Welcome to FFBProject API</h1>
-				<h4 class="text-center">An API for retrieving information about NFL players and performances</h4>
+				<h1 class="text-center"><i class="fas fa-football-ball"></i>  FFBProject API  <i class="fas fa-football-ball"></i></h1>
 			</div>
 		</div>
 		{% include 'includes/modals.html' %}
@@ -51,35 +50,59 @@
 				<div id="main">
 					<div class="content">
 						<section id="section-1">
-							<h3>Getting Started</h3>
+							<h3>Welcome</h3>
 							<hr>
 							<div>
 								<p>
 									This is an API for fetching statistics about NFL player performances. 
 									It allows users to fetch stats about the specific performances of players,
 									the career totals of players, as well as the top fantasy football performers.
+									See the descriptions of the endpoints below to get started.
+								</p>
+								<p>
+									This API is intended for practice and educational purposes only and is not intended
+									to be used for developing production applications. I do not own the rights to the
+									data provided by this API. The NFL owns the rights to all information used in
+									this application. All information that can be retrieved using this API was 
+									scraped from public pages on the internet.
 								</p>
 							</div>
+						</section>
+					</div>
+
+					<div class="content">
+						<section>
+							<h3>Create a Request</h3>
+							<hr>
 							<div>
 								<p>
-									If this is your first time using the API, you must register, which you can 
-									do by clicking <a href="" data-toggle="modal" data-target="#Modal-Register">here</a>.
+									Use the following tool to create a request and press <em>Submit</em> to see the response.
 								</p>
-								<p>
-									In order to use this API, you must first request an access token, which will
-									allow you to make requests and does not expire. To retrieve an access token,
-									send a GET request to <strong>https://ffbrestapi.herokuapp.com/api/login</strong> 
-									using HTTP Basic Authentication with your username and password as the authorization
-									parameters. The request will return your access token. Alternatively, you can
-									click <a href="" data-toggle="modal" data-target="#Modal-Login">here</a> to login
-									and retrieve your access token.
-								</p>
-								<p>
-									After retrieving your access token, you can make a request to any of the endpoints
-									below using your access token as the value of the key "x-access-token" in your
-									request header. Each endpoint has a request limit of 1/minute, 10/hour, and 100/day.
-								</p>
+								<form method="GET">
+									<span>
+										Request: <strong>https://ffbapi.herokuapp.com/api</strong>
+										<select name="endpoint">
+											<option value="players">/players</option>
+											<option value="stats">/stats</option>
+											<option value="top">/top</option>
+											<option value="performances">/performances</option>
+										</select>
+										?
+										<input type="text" name="query-string" placeholder="enter query..."></input>
+										<input type="hidden" name="form-name" value="request-form">
+										<button type="submit" value="Submit">Submit!</button>
+									</span>
+								</form>
 							</div>
+							<br>
+							{% if query_result %}
+							<div>
+								{% if request_string %}
+									<p>Response for <strong>"{{request_string}}"</strong>:</p>
+								{% endif %}
+								<textarea>{{ query_result }}</textarea>
+							</div>
+							{% endif %}
 						</section>
 					</div>
 
@@ -99,8 +122,8 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/players?limit=5 : </strong><a href='/api/sample/players1'>Response</a></li>
-										<li><strong>/players?pos=WR&limit=10 : </strong><a href='/api/sample/players2'>Response</a></li>
+										<li><strong>/players?limit=5 : </strong><a href='/api/players?limit=5'>Response</a></li>
+										<li><strong>/players?pos=WR&limit=10 : </strong><a href='/api/players?pos=WR&limit=10'>Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -116,9 +139,9 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/stats?name=calvin_ridley : </strong><a href="/api/sample/stats1">Response</a></li>
-										<li><strong>/stats?name=dalvin_cook&year=2019 : </strong><a href="/api/sample/stats2"> Response</a></li>
-										<li><strong>/stats?name=justin_herbert&year=2020&week=11 : </strong><a href="/api/sample/stats3">Response</a></li>
+										<li><strong>/stats?name=calvin_ridley : </strong><a href="/api/stats?name=Calvin_Ridley">Response</a></li>
+										<li><strong>/stats?name=dalvin_cook&year=2019 : </strong><a href="/api/stats?name=Dalvin_Cook&year=2019"> Response</a></li>
+										<li><strong>/stats?name=justin_herbert&year=2020&week=11 : </strong><a href="/api/stats?name=Justin_Herbert&year=2020&week=11">Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -135,9 +158,9 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/top?year=2017&limit=5 : </strong><a href="/api/sample/top1">Response</a></li>
-										<li><strong>/top?year=2015&week=7&limit=6 : </strong><a href="/api/sample/top2">Response</a></li>
-										<li><strong>/top?year=2020&pos=TE&limit=5 : </strong><a href="/api/sample/top3">Response</a></li>
+										<li><strong>/top?year=2017&limit=5 : </strong><a href="/api/top?year=2017&limit=5">Response</a></li>
+										<li><strong>/top?year=2015&week=7&limit=6 : </strong><a href="/api/top?year=2015&week=7&limit=6">Response</a></li>
+										<li><strong>/top?year=2020&pos=TE&limit=5 : </strong><a href="/api/top?year=2020&pos=TE&limit=5">Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -153,8 +176,8 @@
 									</ul>
 									<li>Example Calls:</li>
 									<ul>
-										<li><strong>/performances?pos=RB&limit=5 : </strong><a href="/api/sample/performances1">Response</a></li>
-										<li><strong>/performances?year=2017&limit=5 : </strong><a href="/api/sample/performances2">Response</a></li>
+										<li><strong>/performances?pos=RB&limit=5 : </strong><a href="/api/performances?pos=RB&limit=5">Response</a></li>
+										<li><strong>/performances?year=2017&limit=5 : </strong><a href="/api/performances?year=2017&limit=5">Response</a></li>
 									</ul>
 								</ul>
 							</div>
@@ -191,7 +214,6 @@
 		body {
 			background-color: #f7f7f7;
 			font-family: 'Inter', sans-serif;
-			padding-top: 5vh;
 			line-height: 1.9em;
 		}
 		h1, h4, i {
@@ -202,7 +224,7 @@
 			opacity: 20%;
 		}
 		#header-inner {
-			padding: 40px;
+			padding: 60px;
 		}
 		.header {
 			background-color: #000080;
@@ -210,7 +232,7 @@
 			box-shadow: 0px 0px 1px 1px black;
 			height: 300px;
 			width: 100%;
-			margin-bottom: -10vh;
+			margin-bottom: -15vh;
 		}
 		.content {
 			margin-top: 30px;
@@ -246,6 +268,9 @@
 		}
 		.alert {
 			margin: 0;
+		}
+		textarea {
+			width: 100%;
 		}
 
 	</style>

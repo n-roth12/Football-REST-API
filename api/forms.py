@@ -21,6 +21,15 @@ class LoginForm(FlaskForm):
 	password = PasswordField(label='Password:', validators=[DataRequired()])
 	submit = SubmitField(label='Retrieve Token')
 
+# class RequestForm(FlaskForm):
+# 	def validate_endpoint(self, endpoint_to_check):
+# 		if endpoint not in ['/players', '/stats', '/top', '/performances']:
+# 			raise ValidationError('Invalid endpoint. Please try a different endpoint.')
+
+# 	endpoint = StringField(label='Endpoint', validators=[DataRequired()])
+# 	query_string = StringField(label='Query String')
+# 	submit = SubmitField(label='Submit Request')
+
 
 
 
