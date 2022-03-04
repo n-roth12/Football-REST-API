@@ -73,11 +73,11 @@
 					<div class="content">
 						<section>
 							<h3>Create a Request</h3>
+							<p>
+								Use the following tool to create a request and press <em>Submit</em> to see the response.
+							</p>
 							<hr>
 							<div>
-								<p>
-									Use the following tool to create a request and press <em>Submit</em> to see the response.
-								</p>
 								<form method="GET">
 									<span>
 										Request: <strong>https://ffbapi.herokuapp.com/api</strong>
@@ -90,12 +90,12 @@
 										?
 										<input type="text" name="query-string" placeholder="enter query..."></input>
 										<input type="hidden" name="form-name" value="request-form">
-										<button type="submit" value="Submit">Submit!</button>
+										<button id="submit-btn" type="submit" value="Submit">Submit</button>
 									</span>
 								</form>
 							</div>
-							<br>
 							{% if query_result %}
+							<br>
 							<div>
 								{% if request_string %}
 									<p>Response for <strong>"{{request_string}}"</strong>:</p>
@@ -272,6 +272,20 @@
 		textarea {
 			width: 100%;
 		}
+		#submit-btn {
+			color: white;
+			background-color: mediumblue;
+			border: None;
+			padding: 6px 16px;
+			margin: 1rem;
+			border-radius: 10px;
+		}
+/*		#submit-btn {
+			color: mediumblue;
+			background: None;
+			text-decoration: underline;
+			border: None;
+		}*/
 
 	</style>
 
