@@ -1,8 +1,10 @@
 import requests
 import json
 import time
+from datetime import datetime
 import threading
 from bs4 import BeautifulSoup
+from date_services import findWeek
 
 """
 This script is responsible for scraping player statistics from the web and outputs
@@ -11,9 +13,10 @@ for QB, RB, WR, and TE positions only, and it does so by parsing html from footb
 The 4 json files that are output by this script can be used to create and/or update the
 database being used by the API. 
 """
+positions = ['QB', 'RB', 'WR', 'TE']
 
-def scrape() -> None:
-    positions = ['QB', 'RB', 'WR', 'TE']
+
+def full_scrape() -> None:
     print('Scraping NFL player game stats ...')
     thread_list = []
 
@@ -126,6 +129,47 @@ def week_scrape(pos: str, year: int, week: int, week_dict: dict) -> None:
             }
             if not (int(stats[2]) == int(stats[3]) == int(stats[4]) == int(stats[5]) == int(stats[6]) == int(stats[7]) == int(stats[8]) == int(stats[9]) == int(stats[10]) == int(stats[11]) == int(stats[12]) == int(stats[13]) == int(stats[14]) == int(stats[15]) == int(stats[16]) == 0):
                 week_dict[name] = player_dict
+
+
+
+
+
+
+
+
+
+
+def scrape_week(date):
+    thread_list = []
+    
+    year, week = findWeek(date)
+    if not year:
+        print('Invalid date')
+        return
+
+    print(f'Scraping week {week}, {year} stats...')
+    for position in positions:
+        player_data_dict = {}
+        t = threading.Thread(target=pos_helper_week, args=[position, player_data_dict, year, week])
+        t.start()
+        thread_list.append(t)
+
+    for thread in thread_list:
+        thread.join()
+
+    print(f'Completed scraping all weeek {week}, {year} stats.')
+
+def pos_helper_week(pos: str, player_data_dict: dict, year: int, week: int) -> None:
+    print(f'Scraping {pos} data...')
+    pos_scrape_week(pos, player_data_dict, year, week)
+    print(f'Completed scraping {pos} data.')
+    with open(pos + "_data.json", "w") as outfile:
+        result = {str(year): {f'week_{week}': player_data_dict}}
+        json.dump(result, outfile)
+
+def pos_scrape_week(pos: str, player_data_dict: dict, year: int, week: int) -> None:
+    year_dict = {}
+    week_scrape(pos, year, week, player_data_dict)
 
 if __name__ == '__main__':
     start = time.perf_counter()

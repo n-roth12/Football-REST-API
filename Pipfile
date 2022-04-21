@@ -21,6 +21,7 @@ pg = "*"
 flask-limiter = "*"
 flask-cors = "*"
 redis = "*"
+flask-migrate = "*"
 
 [dev-packages]
 

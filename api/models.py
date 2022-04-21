@@ -1,4 +1,9 @@
 from api import db, ma
+from datetime import datetime
+
+class Update(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	time = db.Column(db.DateTime, server_default=str(datetime.now().date()))
 
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -120,6 +125,8 @@ class TopPlayerSchema(ma.SQLAlchemySchema):
 		fields = ('rank', 'name', 'position', 'stats')
 
 	stats = ma.Nested(PlayerGameStatsSchema)
+
+
 
 
 
