@@ -13,10 +13,13 @@ for QB, RB, WR, and TE positions only, and it does so by parsing html from footb
 The 4 json files that are output by this script can be used to create and/or update the
 database being used by the API. 
 """
-positions = ['QB', 'RB', 'WR', 'TE']
+positions = ['QB', 'RB', 'WR', 'TE', 'DST']
 
 
 def full_scrape() -> None:
+    """
+    Starting point for scraping all the player and dst data from all years 
+    """
     print('Scraping NFL player game stats ...')
     thread_list = []
 
@@ -32,13 +35,19 @@ def full_scrape() -> None:
     print('Completed scraping all NFL player game stats.')
 
 def pos_helper(pos: str, player_data_dict: dict) -> None:
+    """
+    Helper function for threading with full_scrape
+    """
     print(f'Scraping {pos} data...')
     pos_scrape(pos, player_data_dict)
     print(f'Completed scraping {pos} data.')
-    with open(pos + "_data.json", "w") as outfile:
+    with open(f'{pos}_data.json', "w") as outfile:
         json.dump(player_data_dict, outfile)
 
 def pos_scrape(pos: str, player_data_dict: dict) -> None:
+    """
+    Helper function for threading with full_scrape
+    """
     years = range(2012, 2021)
     thread_list = []
     for year in years:
@@ -51,6 +60,9 @@ def pos_scrape(pos: str, player_data_dict: dict) -> None:
         thread.join()
 
 def year_helper(pos: str, year: int, year_dict: dict, player_data_dict: dict) -> None:
+    """
+    Helper function for threading with full_scrape
+    """
     print(f'Scraping {year} {pos} stats...')
     year_scrape(pos, year, year_dict)
     print(f'Completed scraping {year} {pos} stats.')
@@ -58,6 +70,9 @@ def year_helper(pos: str, year: int, year_dict: dict, player_data_dict: dict) ->
         player_data_dict[str(year)] = year_dict
 
 def year_scrape(pos: str, year: int, year_dict: dict) -> None:
+    """
+    Helper function for threading with full_scrape
+    """
     weeks = range(1, 19)
     thread_list = []
 
@@ -71,15 +86,23 @@ def year_scrape(pos: str, year: int, year_dict: dict) -> None:
         thread.join()
 
 def week_helper(pos: str, year: int, week: int, week_dict: dict, year_dict: dict) -> None:
-    week_scrape(pos, year, week, week_dict)
+    """
+    Helper function for threading with full_scrape
+    """
+    if pos != 'DST':
+        week_scrape(pos, year, week, week_dict)
+    else:
+        scrape_dst(year, week, week_dict)
     if len(week_dict) > 0:
         year_dict['week_' + str(week)] = week_dict
 
 def week_scrape(pos: str, year: int, week: int, week_dict: dict) -> None:
+    """
+    Scrapes data for skill position players from a given week and adds it to the week_dict
+    """
     base_url = 'https://www.footballdb.com/fantasy-football/index.html?pos='
-    url = base_url + pos + '&yr=' + str(year) + '&wk=' + str(week) + '&rules=2'
+    url = f'{base_url}{pos}&yr={str(year)}&wk={str(week)}&rules=2'
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
-    # Loop for handling connection to web. Loop will attempt to fetch page content 20 times.
     for i in range(100):
         try:
             results = requests.get(url, headers=headers)
@@ -127,19 +150,63 @@ def week_scrape(pos: str, year: int, week: int, week_dict: dict) -> None:
                 'rec_2pts': int(stats[15]),
                 'fumbles_lost': int(stats[16])
             }
-            if not (int(stats[2]) == int(stats[3]) == int(stats[4]) == int(stats[5]) == int(stats[6]) == int(stats[7]) == int(stats[8]) == int(stats[9]) == int(stats[10]) == int(stats[11]) == int(stats[12]) == int(stats[13]) == int(stats[14]) == int(stats[15]) == int(stats[16]) == 0):
-                week_dict[name] = player_dict
+            week_dict[name] = player_dict
 
 
+def scrape_dst(year: int, week: int, week_dict: dict) -> None:
+    """
+    Scrapes DST data for a given week and year and adds it to the week_dict
+    """
+    base_url = 'https://www.footballdb.com/fantasy-football/index.html?pos=DST'
+    url = f'{base_url}&yr={str(year)}&wk={str(week)}'
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
+    for i in range(100):
+        try:
+            results = requests.get(url, headers=headers)
+        except requests.exceptions.ConnectionError:
+            time.sleep(0.005)
+        else:
+            break
+    else:
+        print(f'Unable to scrape DEF stats for {year} week {week}. Please try again.')
 
+    soup = BeautifulSoup(results.text, 'html.parser')
+    name_table = soup.find_all('table', attrs={'class': ['statistics', 'scrollable', 'tablesorter']})
+    name_tbody = name_table[0].find('tbody')
+    name_trs = name_tbody.find_all('tr')
 
+    if len(name_trs) < 1:
+        return
+    else:
+        for name_tr in name_trs:
+            stats = []
+            stats_tds = name_tr.find_all('td')[1:-1]
+            team = stats_tds[0].find('b').text
+            for stat_td in stats_tds:
+                stats.append(stat_td.text)
 
-
-
-
+            player_dict = {
+                'team': team,
+                'game': stats[0],
+                'points': stats[1],
+                'sacks': stats[2],
+                'interceptions': int(stats[3]),
+                'safeties': int(stats[4]),
+                'fumble_recoveries': int(stats[5]),
+                'blocks': int(stats[6]),
+                'touchdowns': int(stats[7]),
+                'points_against': int(stats[8]),
+                'passing_yards_against': int(stats[9]),
+                'rushing_yards_against': int(stats[10]),
+                'yards_against': int(stats[9]) + int(stats[10]),
+            }
+            week_dict[team] = player_dict
 
 
 def scrape_week(year, week):
+    """
+    Starting point for scraping all data from a single week.
+    """
     thread_list = []
 
     print(f'Scraping week {week}, {year} stats...')
@@ -155,16 +222,25 @@ def scrape_week(year, week):
     print(f'Completed scraping all weeek {week}, {year} stats.')
 
 def pos_helper_week(pos: str, player_data_dict: dict, year: int, week: int) -> None:
+    """
+    Helper function for threading with scrape_week
+    """
     print(f'Scraping {pos} data...')
     pos_scrape_week(pos, player_data_dict, year, week)
     print(f'Completed scraping {pos} data.')
-    with open(pos + "_data.json", "w") as outfile:
+    with open(f'{pos}_data.json', "w") as outfile:
         result = {str(year): {f'week_{week}': player_data_dict}}
         json.dump(result, outfile)
 
 def pos_scrape_week(pos: str, player_data_dict: dict, year: int, week: int) -> None:
+    """
+    Helper function for threading with scrape_week
+    """
     year_dict = {}
-    week_scrape(pos, year, week, player_data_dict)
+    if pos != 'DST':
+        week_scrape(pos, year, week, player_data_dict)
+    else:
+        scrape_dst(year, week, player_data_dict)
 
 if __name__ == '__main__':
     start = time.perf_counter()

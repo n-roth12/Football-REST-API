@@ -14,6 +14,7 @@ def scrape_player_data():
 	"""
 	last_update = db.session.query(Update).order_by(Update.id.desc()).first()
 	today_date = date.today()
+	today_date = date(year=2021, month=10, day=14)
 	if not last_update or (today_date - last_update.time.date()).days > 6:
 		year, week = findWeek(today_date)
 		if not year:
