@@ -179,6 +179,8 @@ def scrape_dst(year: int, week: int, week_dict: dict) -> None:
         return
     else:
         for name_tr in name_trs:
+            name_div = name_tr.find('span', attrs={'class': 'hidden-xs'})
+            name = name_div.text
             stats = []
             stats_tds = name_tr.find_all('td')[1:-1]
             team = stats_tds[0].find('b').text
@@ -186,6 +188,7 @@ def scrape_dst(year: int, week: int, week_dict: dict) -> None:
                 stats.append(stat_td.text)
 
             player_dict = {
+                'full_name': name,
                 'team': team,
                 'game': stats[0],
                 'points': stats[1],
@@ -228,7 +231,7 @@ def pos_helper_week(pos: str, player_data_dict: dict, year: int, week: int) -> N
     print(f'Scraping {pos} data...')
     pos_scrape_week(pos, player_data_dict, year, week)
     print(f'Completed scraping {pos} data.')
-    with open(f'{pos}_data.json', "w") as outfile:
+    with open(f'{pos}_update_data.json', "w") as outfile:
         result = {str(year): {f'week_{week}': player_data_dict}}
         json.dump(result, outfile)
 

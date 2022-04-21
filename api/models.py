@@ -2,12 +2,14 @@ from api import db, ma
 from datetime import datetime
 
 class Update(db.Model):
+	__tablename__ = 'update'
 	id = db.Column(db.Integer, primary_key=True)
 	time = db.Column(db.DateTime, server_default=str(datetime.now()))
 	week = db.Column(db.Integer)
 	year = db.Column(db.Integer)
 
 class User(db.Model):
+	__tablename__ = 'user'
 	id = db.Column(db.Integer, primary_key=True)
 	public_id = db.Column(db.String(50), unique=True)
 	username = db.Column(db.String(50))
@@ -25,6 +27,7 @@ class UserSchema(ma.SQLAlchemySchema):
 
 # Each set of game stats belongs to a specific player
 class PlayerGameStats(db.Model):
+	__tablename__ = 'player_game_stats'
 	id = db.Column(db.Integer, primary_key=True)
 	player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
 	week = db.Column(db.Integer())
@@ -105,6 +108,7 @@ class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 
 # Player is the parent object
 class Player(db.Model):
+	__tablename__ = 'player'
 	id = db.Column(db.Integer(), primary_key=True)
 	name = db.Column(db.String(100))
 	position = db.Column(db.String(3))
@@ -127,6 +131,37 @@ class TopPlayerSchema(ma.SQLAlchemySchema):
 		fields = ('rank', 'name', 'position', 'stats')
 
 	stats = ma.Nested(PlayerGameStatsSchema)
+
+
+class DST(db.Model):
+	__tablename__ = 'dst'
+
+	id = db.Column(db.Integer, primary_key=True)
+	team = db.Column(db.String(5))
+	name = db.Column(db.String(30))
+	city = db.Column(db.String(50))
+
+
+class DSTGameStats(db.Model):
+	__tablename__ = 'dst_game_stats'
+	id = db.Column(db.Integer, primary_key=True)
+	dst_id = db.Column(db.Integer, db.ForeignKey('dst.id'))
+	dst = db.relationship('DST', foreign_keys=[dst_id])
+	year = db.Column(db.Integer)
+	week = db.Column(db.Integer)
+	game = db.Column(db.String(10))
+	fantasy_points = db.Column(db.Float)
+	sacks = db.Column(db.Float)
+	interceptions = db.Column(db.Integer)
+	safeties = db.Column(db.Integer)
+	fumble_recoveries = db.Column(db.Integer)
+	blocks = db.Column(db.Integer)
+	touchdowns = db.Column(db.Integer)
+	points_against = db.Column(db.Integer)
+	passing_yards_against = db.Column(db.Integer)
+	rushing_yards_against = db.Column(db.Integer)
+
+
 
 
 

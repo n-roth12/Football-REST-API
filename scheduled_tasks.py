@@ -3,6 +3,7 @@ from api.models import Update
 from datetime import date
 from scraper import scrape_week
 from date_services import getNextWeek, findWeek
+from update_database import build
 
 
 @scheduler.task('interval', id='scrape_player_data', seconds=10)
@@ -21,6 +22,7 @@ def scrape_player_data():
 			print('Season is not active...')
 			return
 		scrape_week(year, week)
+		build()
 		t = Update(year=year, week=week)
 		db.session.add(t)
 		db.session.commit()

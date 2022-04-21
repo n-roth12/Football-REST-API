@@ -3,4 +3,4 @@ import scheduled_tasks
 
 if __name__ == '__main__':
 	scheduler.start()
-	app.run()
+	app.run(use_reloader=False)
