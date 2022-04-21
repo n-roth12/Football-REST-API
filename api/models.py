@@ -3,7 +3,9 @@ from datetime import datetime
 
 class Update(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	time = db.Column(db.DateTime, server_default=str(datetime.now().date()))
+	time = db.Column(db.DateTime, server_default=str(datetime.now()))
+	week = db.Column(db.Integer)
+	year = db.Column(db.Integer)
 
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)

@@ -1,5 +1,7 @@
 import datetime
 
+# Dictionary to store the start and end dates of each NFL regular season
+# from 2012 to 2022
 week_dict = {
 	2012: {
 		'start': {
@@ -114,7 +116,11 @@ week_dict = {
 }
 
 def findWeek(lineup_date):
-
+	"""
+	Returns the year and week of the NFL schedule given a date
+	Returns (None, None) if the date is not part of the NFL
+	regular season
+	"""
 	if lineup_date.year < 2012 or lineup_date.year > 2022:
 		return None, None
 
@@ -137,6 +143,25 @@ def findWeek(lineup_date):
 		return None, None
 
 	return year_adjusted, result
+
+
+def getNextWeek(year, week):
+	"""
+	Returns the next sequential week of the NFL schedule given
+	a current week of the NFL schedule
+	"""
+	if week < 17:
+		return year, week + 1
+	if year < 2021:
+		return year + 1, 1
+	if week >= 18:
+		return year + 1, 1
+	return year, week + 1
+
+
+
+
+
 
 
 

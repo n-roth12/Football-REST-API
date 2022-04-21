@@ -139,13 +139,8 @@ def week_scrape(pos: str, year: int, week: int, week_dict: dict) -> None:
 
 
 
-def scrape_week(date):
+def scrape_week(year, week):
     thread_list = []
-    
-    year, week = findWeek(date)
-    if not year:
-        print('Invalid date')
-        return
 
     print(f'Scraping week {week}, {year} stats...')
     for position in positions:
