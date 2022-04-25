@@ -48,7 +48,7 @@ def pos_scrape(pos: str, player_data_dict: dict) -> None:
     """
     Helper function for threading with full_scrape
     """
-    years = range(2012, 2021)
+    years = range(2012, 2022)
     thread_list = []
     for year in years:
         year_dict = {}

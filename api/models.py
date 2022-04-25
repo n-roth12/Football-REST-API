@@ -150,7 +150,6 @@ class DSTGameStats(db.Model):
 	year = db.Column(db.Integer)
 	week = db.Column(db.Integer)
 	game = db.Column(db.String(10))
-	fantasy_points = db.Column(db.Float)
 	sacks = db.Column(db.Float)
 	interceptions = db.Column(db.Integer)
 	safeties = db.Column(db.Integer)
@@ -160,6 +159,23 @@ class DSTGameStats(db.Model):
 	points_against = db.Column(db.Integer)
 	passing_yards_against = db.Column(db.Integer)
 	rushing_yards_against = db.Column(db.Integer)
+
+class DSTGameStatsSchema(ma.SQLAlchemySchema):
+	class Meta:
+		fields = ('id', 'dst_id', 'year', 'week', 'game', 'sacks', 'interceptions', 'safeties', 'blocks', 'touchdowns', 
+			'points_against', 'passing_yards_against', 'rushing_yards_against')
+
+
+class DSTSchema(ma.SQLAlchemySchema):
+	class Meta:
+		fields = ('id', 'team', 'name', 'city')
+
+
+class TopDefenseSchema(ma.SQLAlchemySchema):
+	class Meta:
+		fields = ('rank', 'team', 'name', 'city')
+
+	stats = ma.Nested(DSTGameStatsSchema)
 
 
 
