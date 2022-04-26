@@ -88,6 +88,7 @@ def get_playergamestats(id: int):
 
 @app.route('/api/dstgamestats/<id>', methods=['GET'])
 def get_dstgamestats(id: int):
+	
 	dstgamestat = db.session.query(DSTGameStats).filter(DSTGameStats.id == id).first()
 	if dstgamestat:
 		return jsonify(DSTGameStatsSchema().dump(dstgamestat))
