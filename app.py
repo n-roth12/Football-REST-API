@@ -1,4 +1,6 @@
-from api import app
+from api import app, scheduler
+import scheduled_tasks
 
 if __name__ == '__main__':
-	app.run()
+	scheduler.start()
+	app.run(use_reloader=False)

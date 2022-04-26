@@ -6,8 +6,8 @@ from sqlalchemy.sql import func
 from sqlalchemy import desc
 from api import db, ma
 import json
-from api.models import PlayerGameStats, Player, User
-from api.models import PlayerGameStatsSchema, PlayerSchema, TopPlayerSchema, UserSchema
+from api.models import PlayerGameStats, Player, User, DSTGameStats, DST
+from api.models import PlayerGameStatsSchema, PlayerSchema, TopPlayerSchema, UserSchema, DSTGameStatsSchema, DSTSchema
 from api.forms import LoginForm, RegisterForm
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -86,6 +86,16 @@ def get_playergamestats(id: int):
 	return jsonify({ 'Error': 'No PlayerGameStat with the specified id!' })
 
 
+@app.route('/api/dstgamestats/<id>', methods=['GET'])
+def get_dstgamestats(id: int):
+	
+	dstgamestat = db.session.query(DSTGameStats).filter(DSTGameStats.id == id).first()
+	if dstgamestat:
+		return jsonify(DSTGameStatsSchema().dump(dstgamestat))
+
+	return jsonify({ 'Error': 'No DSTGameStat with the specified id!' })
+
+
 # Route for fetching the playergamestats of an entire lineup given
 # the playergamestats ids of the players in the lineup
 @app.route('/api/playergamestats', methods=['POST'])
@@ -111,6 +121,7 @@ def get_lineup_playergamestats():
 				)
 
 	return jsonify(result)
+
 
 
 @app.route('/api/players', defaults={'id': None}, methods=['GET'])

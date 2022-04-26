@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
+from flask_apscheduler import APScheduler
+from flask_migrate import Migrate
 import os
 
 app = Flask(__name__, static_folder=os.path.abspath('/Users/NolanRoth/Desktop/FFBRestApi'))
@@ -24,5 +26,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+migrate = Migrate(app, db)
+scheduler = APScheduler()
+scheduler.api_enabled = True
+scheduler.init_app(app)
 
 from api import routes
