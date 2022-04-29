@@ -171,7 +171,7 @@ class DSTSchema(ma.SQLAlchemySchema):
 		fields = ('id', 'team', 'name', 'city')
 
 
-class TopDefenseSchema(ma.SQLAlchemySchema):
+class TopDSTSchema(ma.SQLAlchemySchema):
 	class Meta:
 		fields = ('rank', 'team', 'name', 'city')
 
