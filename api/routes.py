@@ -285,7 +285,7 @@ def get_pos_top():
 							{
 								'rank': i + 1,
 								'name': top_defenses[i][1].team,
-								'pos': 'dst',
+								'position': 'DST',
 								'stats': top_defenses[i][0]
 							}
 						))
