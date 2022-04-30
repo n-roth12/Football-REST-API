@@ -173,7 +173,7 @@ class DSTSchema(ma.SQLAlchemySchema):
 
 class TopDSTSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('rank', 'name', 'pos', 'stats')
+		fields = ('rank', 'name', 'position', 'stats')
 
 	stats = ma.Nested(DSTGameStatsSchema)
 
