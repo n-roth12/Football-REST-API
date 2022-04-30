@@ -130,13 +130,13 @@ def get_lineup_playergamestats():
 						DST.id == DSTGameStats.id) \
 					.first()
 
-		if dst_data:
-			result['dst'] == TopDSTSchema().dump(
-				{
-					'name': dst_data[1].team,
-					'stats': dst_data[0]
-				}
-			)
+	if dst_data:
+		result['dst'] == TopDSTSchema().dump(
+			{
+				'name': dst_data[1].team,
+				'stats': dst_data[0]
+			}
+		)
 
 	return jsonify(result)
 
@@ -248,7 +248,6 @@ def get_week():
 		return jsonify(PlayerGameStatsSchema().dump(career_totals)), 200
 
 
-
 @app.route('/api/top', methods=['GET'])
 def get_pos_top():
 	""" Function to return the top weekly performances via the /top api endpoint.
@@ -275,7 +274,7 @@ def get_pos_top():
 					.filter(DSTGameStats.week == week,
 							DSTGameStats.year == year,
 							DST.id == DSTGameStats.dst_id) \
-					.order_by(DSTGameStats.fantasy_points.desc()) \
+					.order_by(DSTGameStats.points_against.desc()) \
 					.limit(int(limit) if limit else None) \
 					.all()
 
