@@ -13,8 +13,7 @@ in the directory in order for the database to be properly constructed.
 def build() -> None:
 	years = range(2012, 2022)
 	weeks = range(1, 19)
-	# positions = ['QB', 'RB', 'WR', 'TE', 'DST']
-	positions = []
+	positions = ['QB', 'RB', 'WR', 'TE']
 	max_year = 0
 	max_week = 0
 

@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from api import db, ma
 import json
 from api.models import PlayerGameStats, Player, User, DSTGameStats, DST
-from api.models import PlayerGameStatsSchema, PlayerSchema, TopPlayerSchema, UserSchema, DSTGameStatsSchema, DSTSchema
+from api.models import PlayerGameStatsSchema, PlayerSchema, TopPlayerSchema, UserSchema, DSTGameStatsSchema, DSTSchema, TopDSTSchema
 from api.forms import LoginForm, RegisterForm
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -96,10 +96,12 @@ def get_dstgamestats(id: int):
 	return jsonify({ 'Error': 'No DSTGameStat with the specified id!' })
 
 
-# Route for fetching the playergamestats of an entire lineup given
-# the playergamestats ids of the players in the lineup
 @app.route('/api/playergamestats', methods=['POST'])
 def get_lineup_playergamestats():
+	"""
+		Route for fetching the stats and player info for an entire lineup given the
+		ids of the playergamestats/dstgamestats of the player.
+	"""
 	lineup_data = request.data
 	data = json.loads(lineup_data.decode('utf-8'))
 	if not data:
@@ -107,7 +109,8 @@ def get_lineup_playergamestats():
 
 	result = {}
 	for key, value in data.items():
-		if not (value == {} or key == 'points' or key == 'user_id' or key == 'week' or key == 'year' or key == 'id'):
+		if not (value == {} or key == 'points' or key == 'user_id' or key == 'week' 
+			or key == 'year' or key == 'id' or key == 'dst'):
 			player_data = db.session.query(PlayerGameStats, Player) \
 				.filter(PlayerGameStats.id == value,
 					Player.id == PlayerGameStats.player_id) \
@@ -115,26 +118,37 @@ def get_lineup_playergamestats():
 
 			if player_data:
 				result[key] = TopPlayerSchema().dump(
-					{ 'name': player_data[1].name, 
-					'position': player_data[1].position, 
-					'stats': player_data[0] }
+					{ 
+						'name': player_data[1].name, 
+						'position': player_data[1].position, 
+						'stats': player_data[0] 
+					}
 				)
 
-	return jsonify(result)
+	dst_data = db.session.query(DSTGameStats, DST) \
+					.filter(DSTGameStats.id == value,
+						DST.id == DSTGameStats.id) \
+					.first()
 
+	if dst_data:
+		result['dst'] == TopDSTSchema().dump(
+			{
+				'name': dst_data[1].team,
+				'stats': dst_data[0]
+			}
+		)
+
+	return jsonify(result)
 
 
 @app.route('/api/players', defaults={'id': None}, methods=['GET'])
 @app.route('/api/players/<id>', methods=['GET'])
 def get_players(id: str):
-	""" Funciton to return the list of Players via the /players api endpoint.
-
-		Passing an id will return the player with the corresponding id.
-
-		Players can be filtered by position. If position is not specified, all players
-		in the database will be returned.
-
-		User must provide a valid x-access-token to access this endpoint.
+	""" 
+		Route for retrieving players. A single player can be retrieved by 
+		specifying an id, or multiple players can be return by filtering by 
+		position. A limit to the number of returned players can also be 
+		specified.
 	"""
 	if id:
 		player = db.session.query(Player).filter(Player.id == id).first()
@@ -234,7 +248,6 @@ def get_week():
 		return jsonify(PlayerGameStatsSchema().dump(career_totals)), 200
 
 
-
 @app.route('/api/top', methods=['GET'])
 def get_pos_top():
 	""" Function to return the top weekly performances via the /top api endpoint.
@@ -255,6 +268,30 @@ def get_pos_top():
 
 	if year:
 		if week:
+			# Get dst stats seperately
+			if pos and pos == 'dst':
+				top_defenses = db.session.query(DSTGameStats, DST) \
+					.filter(DSTGameStats.week == week,
+							DSTGameStats.year == year,
+							DST.id == DSTGameStats.dst_id) \
+					.order_by(DSTGameStats.points_against.desc()) \
+					.limit(int(limit) if limit else None) \
+					.all()
+
+				if top_defenses:
+					result = []
+					for i in range(len(top_defenses)):
+						result.append(TopDSTSchema().dump(
+							{
+								'rank': i + 1,
+								'name': top_defenses[i][1].team,
+								'stats': top_defenses[i][0]
+							}
+						))
+					return jsonify(result)
+				else:
+					return jsonify({ 'Error': 'No results for the specified week and year.' }), 404
+
 			# Query to get the weekly stats of all players for the specified week and year
 			top_players = db.session \
 				.query(PlayerGameStats, Player) \
@@ -272,10 +309,12 @@ def get_pos_top():
 				result = []
 				for i in range(len(top_players)):
 					result.append(TopPlayerSchema().dump(
-						{ 'rank': i + 1, 
-						'name': top_players[i][1].name, 
-						'position': top_players[i][1].position, 
-						'stats': top_players[i][0] }
+						{ 
+							'rank': i + 1, 
+							'name': top_players[i][1].name, 
+							'position': top_players[i][1].position, 
+							'stats': top_players[i][0] 
+						}
 					))
 				return jsonify(result), 200
 
