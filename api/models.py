@@ -140,7 +140,7 @@ class DSTGameStats(db.Model):
 class DSTGameStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
 		fields = ('id', 'dst_id', 'year', 'week', 'game', 'sacks', 'interceptions', 'safeties', 'blocks', 'touchdowns', 
-			'points_against', 'passing_yards_against', 'rushing_yards_against')
+			'points_against', 'passing_yards_against', 'rushing_yards_against', 'fumble_recoveries')
 
 
 class DSTSchema(ma.SQLAlchemySchema):
