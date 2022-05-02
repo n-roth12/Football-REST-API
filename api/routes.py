@@ -284,7 +284,9 @@ def get_pos_top():
 						result.append(TopDSTSchema().dump(
 							{
 								'rank': i + 1,
-								'name': top_defenses[i][1].team,
+								'team': top_defenses[i][1].team,
+								'city': top_defenses[i][1].city,
+								'name': top_defenses[i][1].name,
 								'position': 'DST',
 								'stats': top_defenses[i][0]
 							}

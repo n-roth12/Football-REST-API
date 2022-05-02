@@ -1,12 +1,14 @@
 from api import db, ma
 from datetime import datetime
 
+
 class Update(db.Model):
 	__tablename__ = 'update'
 	id = db.Column(db.Integer, primary_key=True)
 	time = db.Column(db.DateTime, server_default=str(datetime.now()))
 	week = db.Column(db.Integer)
 	year = db.Column(db.Integer)
+
 
 class User(db.Model):
 	__tablename__ = 'user'
@@ -16,16 +18,12 @@ class User(db.Model):
 	password = db.Column(db.String(256))
 	admin = db.Column(db.Boolean)
 
+
 class UserSchema(ma.SQLAlchemySchema):
 	class Meta:
-		model = User
-
-	public_id = ma.auto_field()
-	username = ma.auto_field()
-	admin = ma.auto_field()
+		fields = ('public_id', 'username', 'admin')
 
 
-# Each set of game stats belongs to a specific player
 class PlayerGameStats(db.Model):
 	__tablename__ = 'player_game_stats'
 	id = db.Column(db.Integer, primary_key=True)
@@ -78,35 +76,16 @@ class PlayerGameStats(db.Model):
 		self.fumbles_lost = fumbles_lost
 		self.fantasy_points = fantasy_points
 
+
 class PlayerGameStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
-		model = PlayerGameStats
-
-	id = ma.auto_field()
-	week = ma.auto_field()
-	year = ma.auto_field()
-	team = ma.auto_field()
-	game = ma.auto_field()
-	passing_attempts = ma.auto_field()
-	passing_completions = ma.auto_field()
-	passing_yards = ma.auto_field()
-	passing_touchdowns = ma.auto_field()
-	passing_interceptions = ma.auto_field()
-	passing_2point_conversions = ma.auto_field()
-	rushing_attempts = ma.auto_field()
-	rushing_yards = ma.auto_field()
-	rushing_touchdowns = ma.auto_field()
-	rushing_2point_conversions = ma.auto_field()
-	receptions = ma.auto_field()
-	recieving_yards = ma.auto_field()
-	recieving_touchdowns = ma.auto_field()
-	recieving_2point_conversions = ma.auto_field()
-	fumbles_lost = ma.auto_field()
-	fantasy_points = ma.auto_field()
-	player_id = ma.auto_field()
+		fields = ('id', 'week', 'year', 'team', 'game', 'passing_attempts', 'passing_completions',
+			'passing_yards', 'passing_touchdowns', 'passing_interceptions', 'passing_2point_conversions',
+			'rushing_attempts', 'rushing_yards', 'rushing_touchdowns', 'rushing_2point_conversions',
+			'receptions', 'recieving_yards', 'recieving_touchdowns', 'recieving_2point_conversions', 
+			'fumbles_lost', 'fantasy_points', 'player_id')
 
 
-# Player is the parent object
 class Player(db.Model):
 	__tablename__ = 'player'
 	id = db.Column(db.Integer(), primary_key=True)
@@ -118,13 +97,11 @@ class Player(db.Model):
 		self.name = name
 		self.position = position
 
+
 class PlayerSchema(ma.SQLAlchemySchema):
 	class Meta:
-		model = Player
+		fields = ('id', 'name', 'position')
 
-	id = ma.auto_field()
-	name = ma.auto_field()
-	position = ma.auto_field()
 
 class TopPlayerSchema(ma.SQLAlchemySchema):
 	class Meta:
@@ -173,7 +150,7 @@ class DSTSchema(ma.SQLAlchemySchema):
 
 class TopDSTSchema(ma.SQLAlchemySchema):
 	class Meta:
-		fields = ('rank', 'name', 'position', 'stats')
+		fields = ('rank', 'team', 'name', 'city', 'position', 'stats')
 
 	stats = ma.Nested(DSTGameStatsSchema)
 
