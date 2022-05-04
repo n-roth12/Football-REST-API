@@ -136,11 +136,50 @@ class DSTGameStats(db.Model):
 	points_against = db.Column(db.Integer)
 	passing_yards_against = db.Column(db.Integer)
 	rushing_yards_against = db.Column(db.Integer)
+	fanduel_points = db.Column(db.Float)
+	draftkings_points = db.Column(db.Float)
+
+	def __init__(self, dst_id, year, week, game, sacks, interceptions, safeties,
+		fumble_recoveries, blocks, touchdowns, points_against, passing_yards_against,
+		rushing_yards_against):
+		self.dst_id = dst_id
+		self.year = year
+		self.week = week
+		self.game = game
+		self.sacks = sacks
+		self.interceptions = interceptions
+		self.safeties = safeties
+		self.fumble_recoveries = fumble_recoveries
+		self.blocks = blocks
+		self.touchdowns = touchdowns
+		self.points_against = points_against
+		self.passing_yards_against = passing_yards_against
+		self.rushing_yards_against = rushing_yards_against
+		fanduel_points = (2 * fumble_recoveries) + \
+						(6 * touchdowns) + \
+						(2 * safeties) + \
+						(2 * blocks) + \
+						(2 * interceptions) + \
+						(sacks)
+		if points_against == 0:
+			fanduel_points += 10
+		elif points_against <= 6:
+			fanduel_points += 7
+		elif points_against <= 13:
+			fanduel_points += 4
+		elif points_against <= 20:
+			fanduel_points += 1
+		elif 28 <= points_against <= 34:
+			fanduel_points -= 1
+		elif points_against > 34:
+			fanduel_points -= 4
+		self.fanduel_points = fanduel_points
+		self.draftkings_points = fanduel_points
 
 class DSTGameStatsSchema(ma.SQLAlchemySchema):
 	class Meta:
 		fields = ('id', 'dst_id', 'year', 'week', 'game', 'sacks', 'interceptions', 'safeties', 'blocks', 'touchdowns', 
-			'points_against', 'passing_yards_against', 'rushing_yards_against')
+			'points_against', 'passing_yards_against', 'rushing_yards_against', 'fumble_recoveries', 'fanduel_points')
 
 
 class DSTSchema(ma.SQLAlchemySchema):
