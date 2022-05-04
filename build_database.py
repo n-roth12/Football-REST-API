@@ -87,6 +87,7 @@ def build() -> None:
 							new_team = DST(team=name)
 							team_object = new_team
 							db.session.add(team_object)
+							db.session.commit()
 
 						stat_data = data[str(year)]["week_" + str(week)][name]
 						new_stats = DSTGameStats(
