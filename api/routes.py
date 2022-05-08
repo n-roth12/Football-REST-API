@@ -453,6 +453,56 @@ def get_top_performances():
 		return jsonify({'Error': 'No data for the year requested.'}), 404
 
 
+@app.route('/api/teamstats', methods=['GET'])
+def get_team_stats():
+	"""
+		Route for retrieving all player stats for a team for a
+		specific week. If no week is specified, returns the stats
+		of all the players grouped by team.
+	"""
+	team = request.args.get('team')
+	year = request.args.get('year')
+	week = request.args.get('week')
+
+	result = []
+
+	if not year or not week:
+		return jsonify({ 'Error': 'Must specify week and year.' }), 400
+
+	if team:
+		players = db.session.query(PlayerGameStats, Player) \
+			.filter(PlayerGameStats.year == year,
+					PlayerGameStats.week == week,
+					PlayerGameStats.player_id == Player.id,
+					PlayerGameStats.team == team) \
+			.all()
+		for player in players:
+			result.append({
+							'name': player[1].name,
+							'position': player[1].position,
+							'stats': PlayerGameStatsSchema().dump(player[0])
+						})
+		return jsonify(result), 200
+	else:
+		teams = [result.team for result in db.session.query(PlayerGameStats.team).distinct()]
+		for team in teams:
+			team_result = []
+			players = db.session.query(PlayerGameStats, Player) \
+				.filter(PlayerGameStats.year == year,
+						PlayerGameStats.week == week,
+						PlayerGameStats.player_id == Player.id,
+						PlayerGameStats.team == team) \
+				.all()
+			for player in players:
+				team_result.append({
+					'name': player[1].name,
+					'position': player[1].position,
+					'stats': PlayerGameStatsSchema().dump(player[0])
+				})
+			result.append({team: team_result})
+		return jsonify(result), 200
+
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def home_page():
