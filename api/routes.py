@@ -464,12 +464,11 @@ def get_team_stats():
 	year = request.args.get('year')
 	week = request.args.get('week')
 
-	result = []
-
 	if not year or not week:
 		return jsonify({ 'Error': 'Must specify week and year.' }), 400
 
 	if team:
+		team_result = []
 		players = db.session.query(PlayerGameStats, Player) \
 			.filter(PlayerGameStats.year == year,
 					PlayerGameStats.week == week,
@@ -477,13 +476,14 @@ def get_team_stats():
 					PlayerGameStats.team == team) \
 			.all()
 		for player in players:
-			result.append({
+			team_result.append({
 							'name': player[1].name,
 							'position': player[1].position,
 							'stats': PlayerGameStatsSchema().dump(player[0])
 						})
-		return jsonify(result), 200
+		return jsonify({team: team_result}), 200
 	else:
+		result = {}
 		teams = [result.team for result in db.session.query(PlayerGameStats.team).distinct()]
 		for team in teams:
 			team_result = []
@@ -499,7 +499,7 @@ def get_team_stats():
 					'position': player[1].position,
 					'stats': PlayerGameStatsSchema().dump(player[0])
 				})
-			result.append({team: team_result})
+			result[team] = team_result
 		return jsonify(result), 200
 
 
