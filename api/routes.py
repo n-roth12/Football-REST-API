@@ -231,7 +231,15 @@ def get_week():
 				else:
 					season_stats[stat_category] = getattr(game_stats, stat_category)
 
-		return jsonify(PlayerGameStatsSchema().dump(season_stats)), 200
+		result = TopPlayerSchema().dump(
+			{
+				'position': player.position,
+				'name': player.name,
+				'stats': season_stats
+			}
+		)
+
+		return jsonify(result), 200
 
 	else:
 		career_stats = db.session.query(PlayerGameStats) \
@@ -245,7 +253,16 @@ def get_week():
 				else:
 					career_totals[stat_category] = getattr(game_stats, stat_category)
 
-		return jsonify(PlayerGameStatsSchema().dump(career_totals)), 200
+		print('test')
+		result = TopPlayerSchema().dump(
+			{
+				'position': player.position,
+				'name': player.name,
+				'stats': career_totals
+			}
+		)
+
+		return jsonify(result), 200
 
 
 @app.route('/api/top', methods=['GET'])
@@ -711,7 +728,6 @@ def home_page():
 
 # 	return make_response('Could not verify', 401, 
 # 		{'WWW-Authenticate' : 'Basic realm-"Login required!"'})
-
 
 
 
