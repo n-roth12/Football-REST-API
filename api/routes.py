@@ -253,7 +253,6 @@ def get_week():
 				else:
 					career_totals[stat_category] = getattr(game_stats, stat_category)
 
-		print('test')
 		result = TopPlayerSchema().dump(
 			{
 				'position': player.position,
