@@ -90,6 +90,22 @@ def getDefenseFanduelPoints(stats):
 	for key, value in fanduel_scoring["defense"].items():
 		points += stats.get(key, default=0) * value
 
+	points_allowed = stats["points_allowed"]
+	if points_allowed < 1:
+		points += fanduel_scoring["defense"]["points_allowed_0"]
+	elif points_allowed < 7:
+		points += fanduel_scoring["defense"]["points_allowed_1_6"]
+	elif points_allowed < 14:
+		points += fanduel_scoring["defense"]["points_allowed_7_13"]
+	elif points_allowed < 21:
+		points += fanduel_scoring["defense"]["points_allowed_14_20"]
+	elif points_allowed < 28:
+		points += fanduel_scoring["defense"]["points_allowed_21_27"]
+	elif points_allowed < 35:
+		points += fanduel_scoring["defense"]["points_allowed_28_34"]
+	else:
+		points += fanduel_scoring["defense"]["points_allowed_35_"]
+
 	return round(points, 2)
 
 def getOffenseDraftkingsPoints(stats):
@@ -103,6 +119,22 @@ def getDefenseDraftkingsPoints(stats):
 	points = 0
 	for key, value in draftkings_scoring["defense"].items():
 		points += stats.get(key, default=0) * value
+
+	points_allowed = stats["points_allowed"]
+	if points_allowed < 1:
+		points += draftkings_scoring["defense"]["points_allowed_0"]
+	elif points_allowed < 7:
+		points += draftkings_scoring["defense"]["points_allowed_1_6"]
+	elif points_allowed < 14:
+		points += draftkings_scoring["defense"]["points_allowed_7_13"]
+	elif points_allowed < 21:
+		points += draftkings_scoring["defense"]["points_allowed_14_20"]
+	elif points_allowed < 28:
+		points += draftkings_scoring["defense"]["points_allowed_21_27"]
+	elif points_allowed < 35:
+		points += draftkings_scoring["defense"]["points_allowed_28_34"]
+	else:
+		points += draftkings_scoring["defense"]["points_allowed_35_"]
 
 	return round(points, 2)
 

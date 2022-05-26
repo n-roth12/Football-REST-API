@@ -519,6 +519,13 @@ def get_team_stats():
 		return jsonify(result), 200
 
 
+@app.route('/api/nfl/teams', methods=['GET'])
+def nfl_teams():
+	teams = db.session.query(DST).all()
+	result = [f'{team.city} {team.name}' for team in teams]
+	return jsonify({"teams": result}), 200
+
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def home_page():
