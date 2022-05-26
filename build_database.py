@@ -3,6 +3,7 @@ from api import db, ma
 import json
 from collections import OrderedDict
 import time
+import point_services
 
 """
 This script is responsible for constructing the database for use of the API
@@ -58,8 +59,11 @@ def build() -> None:
 								recieving_touchdowns=stat_data['rec_tds'],
 								recieving_2point_conversions=stat_data['rec_2pts'],
 								fumbles_lost=stat_data['fumbles_lost'],
-								fantasy_points=( (0.04 * stat_data['pass_yds']) + (4 * stat_data['pass_tds']) + (-2 * stat_data['pass_ints'])  + (2 * stat_data['pass_2pts']) + (0.1 * stat_data['rush_yds']) + (6 * stat_data['rush_tds']) + (2 * stat_data['rush_2pts']) + (stat_data['recs']) + (0.1 * stat_data['rec_yds']) + (6 * stat_data['rec_tds']) + (2 * stat_data['rec_2pts']) + (-2 * stat_data['fumbles_lost'])))
+								fantasy_points=( (0.04 * stat_data['pass_yds']) + (4 * stat_data['pass_tds']) + (-2 * stat_data['pass_ints'])  + (2 * stat_data['pass_2pts']) + (0.1 * stat_data['rush_yds']) + (6 * stat_data['rush_tds']) + (2 * stat_data['rush_2pts']) + (stat_data['recs']) + (0.1 * stat_data['rec_yds']) + (6 * stat_data['rec_tds']) + (2 * stat_data['rec_2pts']) + (-2 * stat_data['fumbles_lost']))
+							)
 							new_stats.player = player_object
+							new_stats.fanduel_points = point_services.getOffenseFanduelPoints(new_stats)
+							new_stats.draftkings_points = point_services.getOffenseDraftkingsPoints(new_stats)
 
 							db.session.add(new_stats)
 							db.session.commit()
@@ -105,6 +109,8 @@ def build() -> None:
 							passing_yards_against=stat_data['passing_yards_against'],
 							rushing_yards_against=stat_data['rushing_yards_against']
 						)
+						new_stats.fanduel_points = point_services.getDefenseFanduelPoints(new_stats)
+						new_stats.draftkings_points = point_services.getDefenseDraftkingsPoints(new_stats)
 
 						db.session.add(new_stats)
 						db.session.commit()

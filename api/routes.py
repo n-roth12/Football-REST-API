@@ -253,7 +253,6 @@ def get_week():
 				else:
 					career_totals[stat_category] = getattr(game_stats, stat_category)
 
-		print('test')
 		result = TopPlayerSchema().dump(
 			{
 				'position': player.position,
@@ -518,6 +517,13 @@ def get_team_stats():
 				})
 			result[team] = team_result
 		return jsonify(result), 200
+
+
+@app.route('/api/nfl/teams', methods=['GET'])
+def nfl_teams():
+	teams = db.session.query(DST).all()
+	result = [f'{team.city} {team.name}' for team in teams]
+	return jsonify({"teams": result}), 200
 
 
 @app.route('/', methods=['GET', 'POST'])

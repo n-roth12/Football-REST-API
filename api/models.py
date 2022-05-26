@@ -47,7 +47,9 @@ class PlayerGameStats(db.Model):
 	recieving_touchdowns = db.Column(db.Integer())
 	recieving_2point_conversions = db.Column(db.Integer())
 	fumbles_lost = db.Column(db.Integer())
-	fantasy_points = db.Column(db.Float())
+	fantasy_points = db.Column(db.Float)
+	fanduel_points = db.Column(db.Float)
+	draftkings_points = db.Column(db.Float)
 
 	def __init__(self, week: int, year: int, team: str, game: str, passing_attempts: int, passing_completions: int, passing_yards: int,
 		passing_touchdowns: int, passing_interceptions: int,
@@ -155,24 +157,6 @@ class DSTGameStats(db.Model):
 		self.points_against = points_against
 		self.passing_yards_against = passing_yards_against
 		self.rushing_yards_against = rushing_yards_against
-		fanduel_points = (2 * fumble_recoveries) + \
-						(6 * touchdowns) + \
-						(2 * safeties) + \
-						(2 * blocks) + \
-						(2 * interceptions) + \
-						(sacks)
-		if points_against == 0:
-			fanduel_points += 10
-		elif points_against <= 6:
-			fanduel_points += 7
-		elif points_against <= 13:
-			fanduel_points += 4
-		elif points_against <= 20:
-			fanduel_points += 1
-		elif 28 <= points_against <= 34:
-			fanduel_points -= 1
-		elif points_against > 34:
-			fanduel_points -= 4
 		self.fanduel_points = fanduel_points
 		self.draftkings_points = fanduel_points
 
