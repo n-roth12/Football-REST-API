@@ -431,8 +431,43 @@ def get_top_performances():
 	year = request.args.get('year')
 	limit = request.args.get('limit')
 	pos = request.args.get('pos')
+	name = request.args.get('name')
 
 	if year:
+		if name:
+			name = convertName(name)
+			player = db.session.query(Player).filter(Player.name == name).first()
+			if not player:
+				return jsonify({ 'Error': 'No player with specified name.' }), 400
+
+			year_stats = db.session.query(PlayerGameStats) \
+				.filter(PlayerGameStats.player_id == player.id, 
+					PlayerGameStats.year == year).all()
+
+			if not year_stats:
+				return jsonify({ 'Error': 'No data found for this player for specified year.' }), 400
+
+			weeks = []
+			season_stats = {}
+			for game_stats in year_stats:
+				weeks.append(PlayerGameStatsSchema().dump(game_stats))
+
+				for stat_category in STAT_CATEGORIES:
+					if stat_category in season_stats:
+						season_stats[stat_category] += getattr(game_stats, stat_category)
+					else:
+						season_stats[stat_category] = getattr(game_stats, stat_category)
+
+			result = {
+					'position': player.position,
+					'name': player.name,
+					'totals': PlayerGameStatsSchema().dump(season_stats),
+					'stats': weeks
+					}
+			
+
+			return jsonify(result), 200
+
 		# Query to get the weekly top_performances ordered by fantasy points scored
 		top_players = db.session.query(Player, PlayerGameStats) \
 			.filter(
