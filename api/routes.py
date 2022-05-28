@@ -290,7 +290,7 @@ def get_pos_top():
 					.filter(DSTGameStats.week == week,
 							DSTGameStats.year == year,
 							DST.id == DSTGameStats.dst_id) \
-					.order_by(DSTGameStats.points_against.desc()) \
+					.order_by(DSTGameStats.fanduel_points.desc()) \
 					.limit(int(limit) if limit else None) \
 					.all()
 
