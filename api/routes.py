@@ -188,15 +188,15 @@ def get_week():
 	week = request.args.get('week')
 
 	if not name:
-		return jsonify({ 'Error': 'Player name must be specified.' })
+		return jsonify({ 'Error': 'Player name must be specified.' }), 400
 
 	if week and not year:
-		return jsonify({ 'Error': 'Year must be specified if week is specified.' })
+		return jsonify({ 'Error': 'Year must be specified if week is specified.' }), 400
 
 	name = convertName(name)
 	player = db.session.query(Player).filter(Player.name == name).first()
 	if not player:
-		return jsonify({ 'Error': 'Player not found in database.' })
+		return jsonify({ 'Error': 'Player not found in database.' }), 400
 
 	if year:
 		if week:
@@ -280,7 +280,7 @@ def get_pos_top():
 	limit = request.args.get('limit')
 
 	if week and not year:
-		return jsonify({ 'Error': 'Year must be specified if week is specified.' })
+		return jsonify({ 'Error': 'Year must be specified if week is specified.' }), 400
 
 	if year:
 		if week:
@@ -413,7 +413,7 @@ def get_pos_top():
 				))
 			return jsonify(result), 200
 	else:
-		return jsonify({ 'Error': 'Year must be specified.' })
+		return jsonify({ 'Error': 'Year must be specified.' }), 400
 
 
 
