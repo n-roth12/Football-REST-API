@@ -178,6 +178,23 @@ class TopDSTSchema(ma.SQLAlchemySchema):
 	stats = ma.Nested(DSTGameStatsSchema)
 
 
+class UpcomingGame(db.Model):
+	__tablename__ = 'upcoming_games'
+	id = db.Column(db.Integer, primary_key=True)
+	time = db.Column(db.DateTime)
+	week = db.Column(db.Integer)
+	year = db.Column(db.Integer)
+	home_team = db.Column(db.String)
+	away_team = db.Column(db.String)
+
+
+class UpcomingGameSchema(ma.SQLAlchemySchema):
+	class Meta:
+		fields = ('id', 'time', 'week', 'year', 'home_team', 'away_team')
+
+
+
+
 
 
 

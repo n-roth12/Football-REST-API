@@ -6,8 +6,8 @@ from sqlalchemy.sql import func
 from sqlalchemy import desc
 from api import db, ma
 import json
-from api.models import PlayerGameStats, Player, User, DSTGameStats, DST
-from api.models import PlayerGameStatsSchema, PlayerSchema, TopPlayerSchema, UserSchema, DSTGameStatsSchema, DSTSchema, TopDSTSchema
+from api.models import PlayerGameStats, Player, User, DSTGameStats, DST, UpcomingGame
+from api.models import PlayerGameStatsSchema, PlayerSchema, TopPlayerSchema, UserSchema, DSTGameStatsSchema, DSTSchema, TopDSTSchema, UpcomingGameSchema
 from api.forms import LoginForm, RegisterForm
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -44,29 +44,29 @@ QUERY_MAP = {'players':
 # 	default_limits=["100000000/day;100000000/hour;100000/minute"])
 
 
-# def token_required(f):
-# 	@wraps(f)
-# 	def decorated(*args, **kwargs):
-# 		""" Decorator for handling required x-access-tokens.
+def token_required(f):
+	@wraps(f)
+	def decorated(*args, **kwargs):
+		""" Decorator for handling required x-access-tokens.
 
-# 		Decoded token is used to find and return User in database. 
-# 		"""
-# 		token = None
-# 		if 'x-access-token' in request.headers:
-# 			token = request.headers['x-access-token']
+		Decoded token is used to find and return User in database. 
+		"""
+		token = None
+		if 'x-access-token' in request.headers:
+			token = request.headers['x-access-token']
 
-# 		if not token:
-# 			return jsonify({'Error' : 'Token is missing.'}), 401
+		if not token:
+			return jsonify({'Error' : 'Token is missing.'}), 401
 
-# 		try:
-# 			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms='HS256')
-# 			current_user = db.session.query(User).filter(User.public_id == data['public_id']).first()
-# 		except:
-# 			return jsonify({'Error' : 'Token is invalid.'}), 401
+		try:
+			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms='HS256')
+			current_user = db.session.query(User).filter(User.public_id == data['public_id']).first()
+		except:
+			return jsonify({'Error' : 'Token is invalid.'}), 401
 
-# 		return f(current_user, *args, **kwargs)
+		return f(current_user, *args, **kwargs)
 
-# 	return decorated
+	return decorated
 
 def convertName(name: str):
 	names = name.split("_")
@@ -515,28 +515,11 @@ def get_team_stats():
 	year = request.args.get('year')
 	week = request.args.get('week')
 
-	if not year or not week:
-		return jsonify({ 'Error': 'Must specify week and year.' }), 400
+	if week and not year:
+		return jsonify({ 'Error': 'Must specify week if year is specified.' }), 400
 
-	if team:
-		team_result = []
-		players = db.session.query(PlayerGameStats, Player) \
-			.filter(PlayerGameStats.year == year,
-					PlayerGameStats.week == week,
-					PlayerGameStats.player_id == Player.id,
-					PlayerGameStats.team == team) \
-			.all()
-		for player in players:
-			team_result.append({
-							'name': player[1].name,
-							'position': player[1].position,
-							'stats': PlayerGameStatsSchema().dump(player[0])
-						})
-		return jsonify({team: team_result}), 200
-	else:
-		result = {}
-		teams = [result.team for result in db.session.query(PlayerGameStats.team).distinct()]
-		for team in teams:
+	if week:
+		if team:
 			team_result = []
 			players = db.session.query(PlayerGameStats, Player) \
 				.filter(PlayerGameStats.year == year,
@@ -546,12 +529,46 @@ def get_team_stats():
 				.all()
 			for player in players:
 				team_result.append({
-					'name': player[1].name,
-					'position': player[1].position,
-					'stats': PlayerGameStatsSchema().dump(player[0])
-				})
-			result[team] = team_result
-		return jsonify(result), 200
+								'name': player[1].name,
+								'position': player[1].position,
+								'stats': PlayerGameStatsSchema().dump(player[0])
+							})
+			return jsonify({team: team_result}), 200
+		else:
+			result = {}
+			teams = [result.team for result in db.session.query(PlayerGameStats.team).distinct()]
+			for team in teams:
+				team_result = []
+				players = db.session.query(PlayerGameStats, Player) \
+					.filter(PlayerGameStats.year == year,
+							PlayerGameStats.week == week,
+							PlayerGameStats.player_id == Player.id,
+							PlayerGameStats.team == team) \
+					.all()
+				for player in players:
+					team_result.append({
+						'name': player[1].name,
+						'position': player[1].position,
+						'stats': PlayerGameStatsSchema().dump(player[1])
+					})
+				result[team] = team_result
+			return jsonify(result), 200
+
+	else:
+		if team and year:
+			team_result = []
+			players = db.session.execute(
+				"SELECT * \
+				FROM player_game_stats AS s \
+				JOIN Player AS p ON s.player_id = p.id \
+				WHERE s.year = :year AND s.team = :team \
+				GROUP BY p.id, s.id",
+				{'year': year, 'team': team}
+			).fetchall()
+			print(players)
+			return 'Success', 200
+		else:
+			return jsonify({ 'Error': 'Please specify a team and a year.' }), 400
 
 
 @app.route('/api/nfl/teams', methods=['GET'])
@@ -559,6 +576,7 @@ def nfl_teams():
 	teams = db.session.query(DST).all()
 	result = [f'{team.city} {team.name}' for team in teams]
 	return jsonify({"teams": result}), 200
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -640,6 +658,52 @@ def home_page():
 		register_form=register_form, login_form=login_form, 
 		query_result=query_result, request_string=request_string)
 
+@app.route('/api/upcoming_games', methods=['GET'])
+def get_games():
+	year = request.args.get('year')
+	week = request.args.get('week')
+
+	if year and week:
+		games = db.session.query(UpcomingGame) \
+			.filter(UpcomingGame.year == year, UpcomingGame.week == week) \
+			.all()
+		return jsonify({ 'games': UpcomingGameSchema(many=True).dump(games) }), 200
+
+	games = db.session.query(UpcomingGame).all()
+	return jsonify({ 'games': UpcomingGameSchema(many=True).dump(games) }), 200
+
+@app.route('/api/upcoming_games', methods=['POST'])
+def add_games():
+	data = request.get_json()
+	games = data['games']
+	for game in games:
+		game_exists = db.session.query(UpcomingGame) \
+			.filter(UpcomingGame.week == game['week'],
+				UpcomingGame.year == game['year'],
+				UpcomingGame.away_team == game['away_team'],
+				UpcomingGame.home_team == game['home_team']) \
+			.first()
+		if not game_exists:
+			new_game = UpcomingGame(
+				week=game['week'],
+				year=game['year'],
+				home_team=game['home_team'],
+				away_team=game['away_team'],
+				time=game['time']
+			)
+			print('Game added.')
+			db.session.add(new_game)
+			db.session.commit()
+		else:
+			time = datetime.datetime.strptime(game['time'], '%Y-%m-%dT%H:%MZ')
+			if game_exists.time != time:
+				game_exists.time = time
+				db.session.commit()
+				print('Game time updated.')
+			else:
+				print('No change')
+
+	return 'Success', 200
 
 
 # @app.route('/api/user', methods=['POST'])
