@@ -44,29 +44,29 @@ QUERY_MAP = {'players':
 # 	default_limits=["100000000/day;100000000/hour;100000/minute"])
 
 
-def token_required(f):
-	@wraps(f)
-	def decorated(*args, **kwargs):
-		""" Decorator for handling required x-access-tokens.
+# def token_required(f):
+# 	@wraps(f)
+# 	def decorated(*args, **kwargs):
+# 		""" Decorator for handling required x-access-tokens.
 
-		Decoded token is used to find and return User in database. 
-		"""
-		token = None
-		if 'x-access-token' in request.headers:
-			token = request.headers['x-access-token']
+# 		Decoded token is used to find and return User in database. 
+# 		"""
+# 		token = None
+# 		if 'x-access-token' in request.headers:
+# 			token = request.headers['x-access-token']
 
-		if not token:
-			return jsonify({'Error' : 'Token is missing.'}), 401
+# 		if not token:
+# 			return jsonify({'Error' : 'Token is missing.'}), 401
 
-		try:
-			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms='HS256')
-			current_user = db.session.query(User).filter(User.public_id == data['public_id']).first()
-		except:
-			return jsonify({'Error' : 'Token is invalid.'}), 401
+# 		try:
+# 			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms='HS256')
+# 			current_user = db.session.query(User).filter(User.public_id == data['public_id']).first()
+# 		except:
+# 			return jsonify({'Error' : 'Token is invalid.'}), 401
 
-		return f(current_user, *args, **kwargs)
+# 		return f(current_user, *args, **kwargs)
 
-	return decorated
+# 	return decorated
 
 def convertName(name: str):
 	names = name.split("_")
@@ -549,7 +549,7 @@ def get_team_stats():
 					team_result.append({
 						'name': player[1].name,
 						'position': player[1].position,
-						'stats': PlayerGameStatsSchema().dump(player[1])
+						'stats': PlayerGameStatsSchema().dump(player[0])
 					})
 				result[team] = team_result
 			return jsonify(result), 200
